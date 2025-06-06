@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学生教师管理系统</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
+    <!-- 自定义配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#10B981',
+                        danger: '#EF4444',
+                        warning: '#F59E0B',
+                        info: '#6366F1',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .card-shadow {
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+<!-- 导航栏 -->
+<nav class="bg-white shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+            <div class="flex items-center">
+                <a href="#" class="flex-shrink-0 flex items-center">
+                    <i class="fa fa-graduation-cap text-primary text-2xl mr-2"></i>
+                    <span class="font-bold text-xl">学生教师管理系统</span>
+                </a>
+            </div>
+            <div class="flex items-center space-x-4">
+                <button id="studentsTab" class="px-4 py-2 text-primary font-medium border-b-2 border-primary">
+                    <i class="fa fa-users mr-1"></i> 学生管理
+                </button>
+                <button id="teachersTab" class="px-4 py-2 text-gray-500 font-medium hover:text-gray-700">
+                    <i class="fa fa-briefcase mr-1"></i> 教师管理
+                </button>
+                <!-- 新增退出按钮 -->
+                <button id="logoutBtn" class="px-4 py-2 bg-red-500 text-white font-medium rounded-md hover:bg-red-600">
+                    <i class="fa fa-sign-out mr-1"></i> 退出
+                </button>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- 主要内容 -->
+<main class="flex-grow container mx-auto px-4 py-8">
+    <!-- 学生管理 -->
+    <div id="studentsSection">
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
+            <div class="bg-primary p-4">
+                <h2 class="text-white text-xl font-bold flex items-center">
+                    <i class="fa fa-users mr-2"></i> 学生列表
+                    <button id="addStudentBtn" class="ml-auto bg-white text-primary px-4 py-1 rounded-md text-sm font-medium hover:bg-gray-100 transition-colors">
+                        <i class="fa fa-plus mr-1"></i> 添加学生
+                    </button>
+                </h2>
+            </div>
+            <div class="p-4">
+                <div class="flex justify-between mb-4">
+                    <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+                                <i class="fa fa-search"></i>
+                            </span>
+                        <input type="text" id="studentSearch" placeholder="搜索学生..." class="pl-10 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary/30 transition duration-200">
+                    </div>
+                    <button id="refreshStudents" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-1 rounded-md text-sm font-medium transition-colors">
+                        <i class="fa fa-refresh mr-1"></i> 刷新
+                    </button>
+                </div>
+                <div id="studentsTable" class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">学号</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">姓名</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">年龄</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">性别</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">成绩</th>
+                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                        </tr>
+                        </thead>
+                        <tbody id="studentsBody" class="bg-white divide-y divide-gray-200">
+                        <!-- 学生数据将通过 JavaScript 动态填充 -->
+                        <tr class="text-center">
+                            <td colspan="6" class="px-6 py-12 text-gray-500">
+                                <i class="fa fa-spinner fa-spin text-2xl mb-2"></i>
+                                <p>加载中...</p>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 教师管理 (默认隐藏) -->
+    <div id="teachersSection" class="hidden">
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
+            <div class="bg-secondary p-4">
+                <h2 class="text-white text-xl font-bold flex items-center">
+                    <i class="fa fa-briefcase mr-2"></i> 教师列表
+                    <button id="addTeacherBtn" class="ml-auto bg-white text-secondary px-4 py-1 rounded-md text-sm font-medium hover:bg-gray-100 transition-colors">
+                        <i class="fa fa-plus mr-1"></i> 添加教师
+                    </button>
+                </h2>
+            </div>
+            <div class="p-4">
+                <div class="flex justify-between mb-4">
+                    <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+                                <i class="fa fa-search"></i>
+                            </span>
+                        <input type="text" id="teacherSearch" placeholder="搜索教师..." class="pl-10 block w-full rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring focus:ring-secondary/30 transition duration-200">
+                    </div>
+                    <button id="refreshTeachers" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-1 rounded-md text-sm font-medium transition-colors">
+                        <i class="fa fa-refresh mr-1"></i> 刷新
+                    </button>
+                </div>
+                <div id="teachersTable" class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">教工号</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">姓名</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">年龄</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">性别</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">教学内容</th>
+                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                        </tr>
+                        </thead>
+                        <tbody id="teachersBody" class="bg-white divide-y divide-gray-200">
+                        <!-- 教师数据将通过 JavaScript 动态填充 -->
+                        <tr class="text-center">
+                            <td colspan="6" class="px-6 py-12 text-gray-500">
+                                <i class="fa fa-spinner fa-spin text-2xl mb-2"></i>
+                                <p>加载中...</p>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- 页脚 -->
+<footer class="bg-gray-800 text-white py-6">
+    <div class="container mx-auto px-4">
+        <div class="text-center">
+            <p>© 2025 学生教师管理系统 | 版权所有</p>
+        </div>
+    </div>
+</footer>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // 初始化选项卡切换等原有逻辑保持不变
+
+        // 处理退出按钮点击事件
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            // 清除本地存储的登录信息（如果有）
+            localStorage.removeItem('isLoggedIn');
+            // 跳转到登录页面
+            window.location.href = 'login.html';
+        });
+    });
+</script>
+</body>
+</html>
+
+<!-- 添加学生模态框 -->
+<div id="addStudentModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-md transform transition-all">
+        <div class="bg-primary p-4 rounded-t-lg">
+            <h3 class="text-white text-lg font-bold flex items-center">
+                <i class="fa fa-user-plus mr-2"></i> 添加学生
+                <button id="closeStudentModal" class="ml-auto text-white hover:text-gray-200">
+                    <i class="fa fa-times"></i>
+                </button>
+            </h3>
+        </div>
+        <div class="p-6">
+            <form id="addStudentForm">
+                <div class="mb-4">
+                    <label for="studentId" class="block text-sm font-medium text-gray-700 mb-1">学号</label>
+                    <input type="text" id="studentId" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary/30 transition duration-200" required>
+                </div>
+                <div class="mb-4">
+                    <label for="studentName" class="block text-sm font-medium text-gray-700 mb-1">姓名</label>
+                    <input type="text" id="studentName" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary/30 transition duration-200" required>
+                </div>
+                <div class="mb-4">
+                    <label for="studentAge" class="block text-sm font-medium text-gray-700 mb-1">年龄</label>
+                    <input type="number" id="studentAge" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary/30 transition duration-200" required>
+                </div>
+                <div class="mb-4">
+                    <label for="studentSex" class="block text-sm font-medium text-gray-700 mb-1">性别</label>
+                    <select id="studentSex" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary/30 transition duration-200" required>
+                        <option value="男">男</option>
+                        <option value="女">女</option>
+                    </select>
+                </div>
+                <div class="mb-6">
+                    <label for="studentGrade" class="block text-sm font-medium text-gray-700 mb-1">成绩</label>
+                    <input type="number" step="0.01" id="studentGrade" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary/30 transition duration-200" required>
+                </div>
+                <div class="flex justify-end space-x-4">
+                    <button type="button" id="cancelAddStudent" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors">取消</button>
+                    <button type="submit" class="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 添加教师模态框 -->
+<div id="addTeacherModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-md transform transition-all">
+        <div class="bg-secondary p-4 rounded-t-lg">
+            <h3 class="text-white text-lg font-bold flex items-center">
+                <i class="fa fa-user-plus mr-2"></i> 添加教师
+                <button id="closeTeacherModal" class="ml-auto text-white hover:text-gray-200">
+                    <i class="fa fa-times"></i>
+                </button>
+            </h3>
+        </div>
+        <div class="p-6">
+            <form id="addTeacherForm">
+                <div class="mb-4">
+                    <label for="teacherId" class="block text-sm font-medium text-gray-700 mb-1">教工号</label>
+                    <input type="text" id="teacherId" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring focus:ring-secondary/30 transition duration-200" required>
+                </div>
+                <div class="mb-4">
+                    <label for="teacherName" class="block text-sm font-medium text-gray-700 mb-1">姓名</label>
+                    <input type="text" id="teacherName" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring focus:ring-secondary/30 transition duration-200" required>
+                </div>
+                <div class="mb-4">
+                    <label for="teacherAge" class="block text-sm font-medium text-gray-700 mb-1">年龄</label>
+                    <input type="number" id="teacherAge" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring focus:ring-secondary/30 transition duration-200" required>
+                </div>
+                <div class="mb-4">
+                    <label for="teacherSex" class="block text-sm font-medium text-gray-700 mb-1">性别</label>
+                    <select id="teacherSex" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring focus:ring-secondary/30 transition duration-200" required>
+                        <option value="男">男</option>
+                        <option value="女">女</option>
+                    </select>
+                </div>
+                <div class="mb-6">
+                    <label for="teacherTeaching" class="block text-sm font-medium text-gray-700 mb-1">教学内容</label>
+                    <input type="text" id="teacherTeaching" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring focus:ring-secondary/30 transition duration-200" required>
+                </div>
+                <div class="flex justify-end space-x-4">
+                    <button type="button" id="cancelAddTeacher" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors">取消</button>
+                    <button type="submit" class="px-4 py-2 bg-secondary text-white rounded-md hover:bg-secondary/90 transition-colors">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 编辑学生模态框 -->
+<div id="editStudentModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-md transform transition-all">
+        <div class="bg-warning p-4 rounded-t-lg">
+            <h3 class="text-white text-lg font-bold flex items-center">
+                <i class="fa fa-pencil mr-2"></i> 编辑学生
+                <button id="closeEditStudentModal" class="ml-auto text-white hover:text-gray-200">
+                    <i class="fa fa-times"></i>
+                </button>
+            </h3>
+        </div>
+        <div class="p-6">
+            <form id="editStudentForm">
+                <div class="mb-4">
+                    <label for="editStudentId" class="block text-sm font-medium text-gray-700 mb-1">学号</label>
+                    <input type="text" id="editStudentId" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-warning focus:ring focus:ring-warning/30 transition duration-200" readonly>
+                </div>
+                <div class="mb-4">
+                    <label for="editStudentName" class="block text-sm font-medium text-gray-700 mb-1">姓名</label>
+                    <input type="text" id="editStudentName" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-warning focus:ring focus:ring-warning/30 transition duration-200" required>
+                </div>
+                <div class="mb-4">
+                    <label for="editStudentAge" class="block text-sm font-medium text-gray-700 mb-1">年龄</label>
+                    <input type="number" id="editStudentAge" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-warning focus:ring focus:ring-warning/30 transition duration-200" required>
+                </div>
+                <div class="mb-4">
+                    <label for="editStudentSex" class="block text-sm font-medium text-gray-700 mb-1">性别</label>
+                    <select id="editStudentSex" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-warning focus:ring focus:ring-warning/30 transition duration-200" required>
+                        <option value="男">男</option>
+                        <option value="女">女</option>
+                    </select>
+                </div>
+                <div class="mb-6">
+                    <label for="editStudentGrade" class="block text-sm font-medium text-gray-700 mb-1">成绩</label>
+                    <input type="number" step="0.01" id="editStudentGrade" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-warning focus:ring focus:ring-warning/30 transition duration-200" required>
+                </div>
+                <div class="flex justify-end space-x-4">
+                    <button type="button" id="cancelEditStudent" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors">取消</button>
+                    <button type="submit" class="px-4 py-2 bg-warning text-white rounded-md hover:bg-warning/90 transition-colors">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 编辑教师模态框 -->
+<div id="editTeacherModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-md transform transition-all">
+        <div class="bg-info p-4 rounded-t-lg">
+            <h3 class="text-white text-lg font-bold flex items-center">
+                <i class="fa fa-pencil mr-2"></i> 编辑教师
+                <button id="closeEditTeacherModal" class="ml-auto text-white hover:text-gray-200">
+                    <i class="fa fa-times"></i>
+                </button>
+            </h3>
+        </div>
+        <div class="p-6">
+            <form id="editTeacherForm">
+                <div class="mb-4">
+                    <label for="editTeacherId" class="block text-sm font-medium text-gray-700 mb-1">教工号</label>
+                    <input type="text" id="editTeacherId" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-info focus:ring focus:ring-info/30 transition duration-200" readonly>
+                </div>
+                <div class="mb-4">
+                    <label for="editTeacherName" class="block text-sm font-medium text-gray-700 mb-1">姓名</label>
+                    <input type="text" id="editTeacherName" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-info focus:ring focus:ring-info/30 transition duration-200" required>
+                </div>
+                <div class="mb-4">
+                    <label for="editTeacherAge" class="block text-sm font-medium text-gray-700 mb-1">年龄</label>
+                    <input type="number" id="editTeacherAge" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-info focus:ring focus:ring-info/30 transition duration-200" required>
+                </div>
+                <div class="mb-4">
+                    <label for="editTeacherSex" class="block text-sm font-medium text-gray-700 mb-1">性别</label>
+                    <select id="editTeacherSex" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-info focus:ring focus:ring-info/30 transition duration-200" required>
+                        <option value="男">男</option>
+                        <option value="女">女</option>
+                    </select>
+                </div>
+                <div class="mb-6">
+                    <label for="editTeacherTeaching" class="block text-sm font-medium text-gray-700 mb-1">教学内容</label>
+                    <input type="text" id="editTeacherTeaching" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-info focus:ring focus:ring-info/30 transition duration-200" required>
+                </div>
+                <div class="flex justify-end space-x-4">
+                    <button type="button" id="cancelEditTeacher" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors">取消</button>
+                    <button type="submit" class="px-4 py-2 bg-info text-white rounded-md hover:bg-info/90 transition-colors">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 确认删除模态框 -->
+<div id="confirmDeleteModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-md transform transition-all">
+        <div class="bg-danger p-4 rounded-t-lg">
+            <h3 class="text-white text-lg font-bold flex items-center">
+                <i class="fa fa-trash mr-2"></i> 确认删除
+            </h3>
+        </div>
+        <div class="p-6">
+            <p id="deleteMessage" class="text-gray-700 mb-6">你确定要删除此记录吗？此操作不可撤销。</p>
+            <div class="flex justify-end space-x-4">
+                <button type="button" id="cancelDelete" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors">取消</button>
+                <button type="button" id="confirmDelete" class="px-4 py-2 bg-danger text-white rounded-md hover:bg-danger/90 transition-colors">确认删除</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 通知提示 -->
+<div id="notification" class="fixed top-4 right-4 max-w-xs bg-white rounded-lg shadow-lg overflow-hidden transform translate-x-full transition-transform duration-500 z-50">
+    <div id="notificationHeader" class="p-3 bg-primary text-white flex justify-between items-center">
+        <h3 id="notificationTitle" class="font-medium">通知</h3>
+        <button id="closeNotification" class="text-white hover:text-gray-200 transition-colors">
+            <i class="fa fa-times"></i>
+        </button>
+    </div>
+    <div class="p-4">
+        <p id="notificationMessage"></p>
+    </div>
+</div>
+
+<script>
+    // 模拟数据 - 学生
+    const mockStudents = [
+        { id: '2025001', name: '张三', age: 20, sex: '男', grade: 85.5 },
+        { id: '2025002', name: '李四', age: 21, sex: '女', grade: 90.0 },
+        { id: '2025003', name: '王五', age: 19, sex: '男', grade: 78.2 },
+        { id: '2025004', name: '赵六', age: 22, sex: '女', grade: 92.8 },
+        { id: '2025005', name: '钱七', age: 20, sex: '男', grade: 88.7 },
+    ];
+
+    // 模拟数据 - 教师
+    const mockTeachers = [
+        { id: 'T2025001', name: '周老师', age: 35, sex: '女', teaching: '数学' },
+        { id: 'T2025002', name: '吴老师', age: 42, sex: '男', teaching: '语文' },
+        { id: 'T2025003', name: '郑老师', age: 38, sex: '女', teaching: '英语' },
+        { id: 'T2025004', name: '王老师', age: 30, sex: '男', teaching: '物理' },
+        { id: 'T2025005', name: '孙老师', age: 45, sex: '女', teaching: '化学' },
+    ];
+
+    /// 当前选中的学生/教师 ID（用于编辑和删除）
+    let currentStudentId = null;
+    let currentTeacherId = null;
+    let currentEntityType = null; // 'student' 或 'teacher'
+    let originalStudents = [];
+    let originalTeachers = [];
+
+    // DOM 加载完成后执行
+    document.addEventListener('DOMContentLoaded', () => {
+        // 初始化选项卡切换
+        document.getElementById('studentsTab').addEventListener('click', () => {
+            document.getElementById('studentsTab').classList.add('text-primary', 'border-b-2', 'border-primary');
+            document.getElementById('studentsTab').classList.remove('text-gray-500');
+            document.getElementById('teachersTab').classList.remove('text-secondary', 'border-b-2', 'border-secondary');
+            document.getElementById('teachersTab').classList.add('text-gray-500');
+            document.getElementById('studentsSection').classList.remove('hidden');
+            document.getElementById('teachersSection').classList.add('hidden');
+
+            // 加载学生数据
+            loadStudents();
+        });
+
+        document.getElementById('teachersTab').addEventListener('click', () => {
+            document.getElementById('teachersTab').classList.add('text-secondary', 'border-b-2', 'border-secondary');
+            document.getElementById('teachersTab').classList.remove('text-gray-500');
+            document.getElementById('studentsTab').classList.remove('text-primary', 'border-b-2', 'border-primary');
+            document.getElementById('studentsTab').classList.add('text-gray-500');
+            document.getElementById('teachersSection').classList.remove('hidden');
+            document.getElementById('studentsSection').classList.add('hidden');
+
+            // 加载教师数据
+            loadTeachers();
+        });
+
+        // 初始化模态框事件
+        document.getElementById('addStudentBtn').addEventListener('click', () => {
+            document.getElementById('addStudentModal').classList.remove('hidden');
+            document.getElementById('addStudentForm').reset();
+        });
+
+        document.getElementById('closeStudentModal').addEventListener('click', () => {
+            document.getElementById('addStudentModal').classList.add('hidden');
+        });
+
+        document.getElementById('cancelAddStudent').addEventListener('click', () => {
+            document.getElementById('addStudentModal').classList.add('hidden');
+        });
+
+        document.getElementById('addTeacherBtn').addEventListener('click', () => {
+            document.getElementById('addTeacherModal').classList.remove('hidden');
+            document.getElementById('addTeacherForm').reset();
+        });
+
+        document.getElementById('closeTeacherModal').addEventListener('click', () => {
+            document.getElementById('addTeacherModal').classList.add('hidden');
+        });
+
+        document.getElementById('cancelAddTeacher').addEventListener('click', () => {
+            document.getElementById('addTeacherModal').classList.add('hidden');
+        });
+
+        document.getElementById('closeEditStudentModal').addEventListener('click', () => {
+            document.getElementById('editStudentModal').classList.add('hidden');
+        });
+
+        document.getElementById('cancelEditStudent').addEventListener('click', () => {
+            document.getElementById('editStudentModal').classList.add('hidden');
+        });
+
+        document.getElementById('closeEditTeacherModal').addEventListener('click', () => {
+            document.getElementById('editTeacherModal').classList.add('hidden');
+        });
+
+        document.getElementById('cancelEditTeacher').addEventListener('click', () => {
+            document.getElementById('editTeacherModal').classList.add('hidden');
+        });
+
+        document.getElementById('cancelDelete').addEventListener('click', () => {
+            document.getElementById('confirmDeleteModal').classList.add('hidden');
+        });
+
+        document.getElementById('closeNotification').addEventListener('click', () => {
+            document.getElementById('notification').classList.add('translate-x-full');
+        });
+
+        // 初始化表单提交事件
+        document.getElementById('addStudentForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            addStudent();
+        });
+
+        document.getElementById('addTeacherForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            addTeacher();
+        });
+
+        document.getElementById('editStudentForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            updateStudent();
+        });
+
+        document.getElementById('editTeacherForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            updateTeacher();
+        });
+
+        document.getElementById('confirmDelete').addEventListener('click', () => {
+            if (currentEntityType === 'student') {
+                deleteStudent();
+            } else if (currentEntityType === 'teacher') {
+                deleteTeacher();
+            }
+            document.getElementById('confirmDeleteModal').classList.add('hidden');
+        });
+
+        // 初始化刷新按钮
+        document.getElementById('refreshStudents').addEventListener('click', loadStudents);
+        document.getElementById('refreshTeachers').addEventListener('click', loadTeachers);
+
+        // 初始化搜索功能
+        document.getElementById('studentSearch').addEventListener('input', () => {
+            filterStudents();
+        });
+
+        document.getElementById('teacherSearch').addEventListener('input', () => {
+            filterTeachers();
+        });
+
+        // 初始加载学生数据
+        loadStudents();
+    });
+
+    // 加载学生数据
+    async function loadStudents() {
+        const studentsBody = document.getElementById('studentsBody');
+        studentsBody.innerHTML = `
+        <tr class="text-center">
+            <td colspan="6" class="px-6 py-12 text-gray-500">
+                <i class="fa fa-spinner fa-spin text-2xl mb-2"></i>
+                <p>加载中...</p>
+            </td>
+        </tr>
+    `;
+        try {
+            const response = await fetch('/api/students');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            originalStudents = await response.json();
+            studentsBody.innerHTML = '';
+            originalStudents.forEach(student => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 transition-colors duration-150';
+                row.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${student.id}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${student.name}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${student.age}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${student.sex}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${student.grade}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button onclick="editStudent('${student.id}')" class="text-indigo-600 hover:text-indigo-900 mr-3">
+                        <i class="fa fa-pencil"></i> 编辑
+                    </button>
+                    <button onclick="confirmDelete('student', '${student.id}', '${student.name}')" class="text-red-600 hover:text-red-900">
+                        <i class="fa fa-trash"></i> 删除
+                    </button>
+                </td>
+            `;
+                studentsBody.appendChild(row);
+            });
+        } catch (error) {
+            studentsBody.innerHTML = `
+            <tr class="text-center">
+                <td colspan="6" class="px-6 py-12 text-gray-500">
+                    <i class="fa fa-exclamation-triangle text-2xl mb-2"></i>
+                    <p>加载学生数据失败: ${error.message}</p>
+                </td>
+            </tr>
+        `;
+        }
+    }
+
+    // 加载教师数据
+    async function loadTeachers() {
+        const teachersBody = document.getElementById('teachersBody');
+        teachersBody.innerHTML = `
+        <tr class="text-center">
+            <td colspan="6" class="px-6 py-12 text-gray-500">
+                <i class="fa fa-spinner fa-spin text-2xl mb-2"></i>
+                <p>加载中...</p>
+            </td>
+        </tr>
+    `;
+        try {
+            const response = await fetch('/api/teachers');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            originalTeachers = await response.json();
+            teachersBody.innerHTML = '';
+            originalTeachers.forEach(teacher => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 transition-colors duration-150';
+                row.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${teacher.id}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${teacher.name}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${teacher.age}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${teacher.sex}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${teacher.teaching}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button onclick="editTeacher('${teacher.id}')" class="text-indigo-600 hover:text-indigo-900 mr-3">
+                        <i class="fa fa-pencil"></i> 编辑
+                    </button>
+                    <button onclick="confirmDelete('teacher', '${teacher.id}', '${teacher.name}')" class="text-red-600 hover:text-red-900">
+                        <i class="fa fa-trash"></i> 删除
+                    </button>
+                </td>
+            `;
+                teachersBody.appendChild(row);
+            });
+        } catch (error) {
+            teachersBody.innerHTML = `
+            <tr class="text-center">
+                <td colspan="6" class="px-6 py-12 text-gray-500">
+                    <i class="fa fa-exclamation-triangle text-2xl mb-2"></i>
+                    <p>加载教师数据失败: ${error.message}</p>
+                </td>
+            </tr>
+        `;
+        }
+    }
+
+    // 添加学生
+    function addStudent() {
+        const id = document.getElementById('studentId').value;
+        const name = document.getElementById('studentName').value;
+        const age = parseInt(document.getElementById('studentAge').value);
+        const sex = document.getElementById('studentSex').value;
+        const grade = parseFloat(document.getElementById('studentGrade').value);
+
+        // 发送 POST 请求到后端
+        fetch('/api/students', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ id, name, age, sex, grade })
+        })
+            .then(response => response.json())
+            .then(data => {
+                showNotification('success', '成功', '学生添加成功');
+                document.getElementById('addStudentModal').classList.add('hidden');
+                document.getElementById('addStudentForm').reset();
+                loadStudents();
+            })
+            .catch(error => {
+                showNotification('error', '失败', '学生添加失败，请稍后重试');
+                console.error('添加学生失败:', error);
+            });
+    }
+
+    // 添加教师
+    function addTeacher() {
+        const id = document.getElementById('teacherId').value;
+        const name = document.getElementById('teacherName').value;
+        const age = parseInt(document.getElementById('teacherAge').value);
+        const sex = document.getElementById('teacherSex').value;
+        const teaching = document.getElementById('teacherTeaching').value;
+
+        // 发送 POST 请求到后端
+        fetch('/api/teachers', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ id, name, age, sex, teaching })
+        })
+            .then(response => response.json())
+            .then(data => {
+                showNotification('success', '成功', '教师添加成功');
+                document.getElementById('addTeacherModal').classList.add('hidden');
+                document.getElementById('addTeacherForm').reset();
+                loadTeachers();
+            })
+            .catch(error => {
+                showNotification('error', '失败', '教师添加失败，请稍后重试');
+                console.error('添加教师失败:', error);
+            });
+    }
+
+    // 编辑学生
+    function editStudent(id) {
+        currentStudentId = id;
+        console.log('originalStudents:', originalStudents); // 添加日志输出
+
+        const student = originalStudents.find(student => student.id === id);
+        if (!student) {
+            showNotification('error', '失败', '未找到该学生');
+            return;
+        }
+
+        document.getElementById('editStudentId').value = student.id;
+        document.getElementById('editStudentName').value = student.name;
+        document.getElementById('editStudentAge').value = student.age;
+        document.getElementById('editStudentSex').value = student.sex;
+        document.getElementById('editStudentGrade').value = student.grade;
+        document.getElementById('editStudentModal').classList.remove('hidden');
+    }
+
+    // 编辑教师
+    function editTeacher(id) {
+        currentTeacherId = id;
+
+        const teacher = originalTeachers.find(teacher => teacher.id === id);
+        if (!teacher) {
+            showNotification('error', '失败', '未找到该教师');
+            return;
+        }
+
+        document.getElementById('editTeacherId').value = teacher.id;
+        document.getElementById('editTeacherName').value = teacher.name;
+        document.getElementById('editTeacherAge').value = teacher.age;
+        document.getElementById('editTeacherSex').value = teacher.sex;
+        document.getElementById('editTeacherTeaching').value = teacher.teaching;
+        document.getElementById('editTeacherModal').classList.remove('hidden');
+    }
+
+    // 更新学生
+    function updateStudent() {
+        const id = document.getElementById('editStudentId').value;
+        const name = document.getElementById('editStudentName').value;
+        const age = parseInt(document.getElementById('editStudentAge').value);
+        const sex = document.getElementById('editStudentSex').value;
+        const grade = parseFloat(document.getElementById('editStudentGrade').value);
+
+        // 发送 PUT 请求到后端
+        fetch(`/api/students/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ id, name, age, sex, grade })
+        })
+            .then(response => response.json())
+            .then(data => {
+                showNotification('success', '成功', '学生信息更新成功');
+                document.getElementById('editStudentModal').classList.add('hidden');
+                loadStudents();
+            })
+            .catch(error => {
+                showNotification('error', '失败', '学生信息更新失败，请稍后重试');
+                console.error('更新学生信息失败:', error);
+            });
+    }
+
+    // 更新教师
+    function updateTeacher() {
+        const id = document.getElementById('editTeacherId').value;
+        const name = document.getElementById('editTeacherName').value;
+        const age = parseInt(document.getElementById('editTeacherAge').value);
+        const sex = document.getElementById('editTeacherSex').value;
+        const teaching = document.getElementById('editTeacherTeaching').value;
+
+        // 发送 PUT 请求到后端
+        fetch(`/api/teachers/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ id, name, age, sex, teaching })
+        })
+            .then(response => response.json())
+            .then(data => {
+                showNotification('success', '成功', '教师信息更新成功');
+                document.getElementById('editTeacherModal').classList.add('hidden');
+                loadTeachers();
+            })
+            .catch(error => {
+                showNotification('error', '失败', '教师信息更新失败，请稍后重试');
+                console.error('更新教师信息失败:', error);
+            });
+    }
+    // 确认删除
+    function confirmDelete(entityType, id, name) {
+        currentEntityType = entityType;
+        if (entityType === 'student') {
+            currentStudentId = id;
+            document.getElementById('deleteMessage').textContent = `你确定要删除学生 "${name}" 吗？此操作不可撤销。`;
+        } else if (entityType === 'teacher') {
+            currentTeacherId = id;
+            document.getElementById('deleteMessage').textContent = `你确定要删除教师 "${name}" 吗？此操作不可撤销。`;
+        }
+        document.getElementById('confirmDeleteModal').classList.remove('hidden');
+    }
+
+    // 删除学生
+    function deleteStudent() {
+        if (!currentStudentId) return;
+
+        // 发送 DELETE 请求到后端
+        fetch(`/api/students/${currentStudentId}`, {
+            method: 'DELETE'
+        })
+            .then(response => {
+                if (response.ok) {
+                    showNotification('success', '成功', '学生删除成功');
+                    loadStudents();
+                } else {
+                    showNotification('error', '失败', '学生删除失败，请稍后重试');
+                    console.error('删除学生失败:', response.statusText);
+                }
+            })
+            .catch(error => {
+                showNotification('error', '失败', '学生删除失败，请稍后重试');
+                console.error('删除学生失败:', error);
+            });
+
+        document.getElementById('confirmDeleteModal').classList.add('hidden');
+    }
+
+    // 删除教师
+    function deleteTeacher() {
+        if (!currentTeacherId) return;
+
+        // 发送 DELETE 请求到后端
+        fetch(`/api/teachers/${currentTeacherId}`, {
+            method: 'DELETE'
+        })
+            .then(response => {
+                if (response.ok) {
+                    showNotification('success', '成功', '教师删除成功');
+                    loadTeachers();
+                } else {
+                    showNotification('error', '失败', '教师删除失败，请稍后重试');
+                    console.error('删除教师失败:', response.statusText);
+                }
+            })
+            .catch(error => {
+                showNotification('error', '失败', '教师删除失败，请稍后重试');
+                console.error('删除教师失败:', error);
+            });
+
+        document.getElementById('confirmDeleteModal').classList.add('hidden');
+    }
+
+    // 搜索学生
+    function filterStudents() {
+        const searchTerm = document.getElementById('studentSearch').value.toLowerCase();
+
+        if (!searchTerm) {
+            loadStudents();
+            return;
+        }
+
+        const filteredStudents = originalStudents.filter(student =>
+            student.id.toLowerCase().includes(searchTerm) ||
+            student.name.toLowerCase().includes(searchTerm) ||
+            student.sex.toLowerCase().includes(searchTerm)
+        );
+
+        const studentsBody = document.getElementById('studentsBody');
+
+        if (filteredStudents.length === 0) {
+            studentsBody.innerHTML = `
+                    <tr class="text-center">
+                        <td colspan="6" class="px-6 py-12 text-gray-500">
+                            <i class="fa fa-search text-2xl mb-2"></i>
+                            <p>未找到匹配的学生</p>
+                        </td>
+                    </tr>
+                `;
+            return;
+        }
+
+        studentsBody.innerHTML = '';
+        filteredStudents.forEach(student => {
+            const row = document.createElement('tr');
+            row.className = 'hover:bg-gray-50 transition-colors duration-150';
+            row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${student.id}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${student.name}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${student.age}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${student.sex}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${student.grade}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button onclick="editStudent('${student.id}')" class="text-indigo-600 hover:text-indigo-900 mr-3">
+                            <i class="fa fa-pencil"></i> 编辑
+                        </button>
+                        <button onclick="confirmDelete('student', '${student.id}', '${student.name}')" class="text-red-600 hover:text-red-900">
+                            <i class="fa fa-trash"></i> 删除
+                        </button>
+                    </td>
+                `;
+            studentsBody.appendChild(row);
+        });
+    }
+
+    // 搜索教师
+    function filterTeachers() {
+        const searchTerm = document.getElementById('teacherSearch').value.toLowerCase();
+
+        if (!searchTerm) {
+            loadTeachers();
+            return;
+        }
+
+        const filteredTeachers = originalTeachers.filter(teacher =>
+            teacher.id.toLowerCase().includes(searchTerm) ||
+            teacher.name.toLowerCase().includes(searchTerm) ||
+            teacher.sex.toLowerCase().includes(searchTerm) ||
+            teacher.teaching.toLowerCase().includes(searchTerm)
+        );
+
+        const teachersBody = document.getElementById('teachersBody');
+
+        if (filteredTeachers.length === 0) {
+            teachersBody.innerHTML = `
+                    <tr class="text-center">
+                        <td colspan="6" class="px-6 py-12 text-gray-500">
+                            <i class="fa fa-search text-2xl mb-2"></i>
+                            <p>未找到匹配的教师</p>
+                        </td>
+                    </tr>
+                `;
+            return;
+        }
+
+        teachersBody.innerHTML = '';
+        filteredTeachers.forEach(teacher => {
+            const row = document.createElement('tr');
+            row.className = 'hover:bg-gray-50 transition-colors duration-150';
+            row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${teacher.id}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${teacher.name}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${teacher.age}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${teacher.sex}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${teacher.teaching}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button onclick="editTeacher('${teacher.id}')" class="text-indigo-600 hover:text-indigo-900 mr-3">
+                            <i class="fa fa-pencil"></i> 编辑
+                        </button>
+                        <button onclick="confirmDelete('teacher', '${teacher.id}', '${teacher.name}')" class="text-red-600 hover:text-red-900">
+                            <i class="fa fa-trash"></i> 删除
+                        </button>
+                    </td>
+                `;
+            teachersBody.appendChild(row);
+        });
+    }
+
+    // 显示通知
+    function showNotification(type, title, message) {
+        const notification = document.getElementById('notification');
+        const notificationHeader = document.getElementById('notificationHeader');
+        const notificationTitle = document.getElementById('notificationTitle');
+        const notificationMessage = document.getElementById('notificationMessage');
+
+        // 设置通知样式和内容
+        if (type === 'success') {
+            notificationHeader.className = 'p-3 bg-green-500 text-white flex justify-between items-center';
+        } else if (type === 'error') {
+            notificationHeader.className = 'p-3 bg-red-500 text-white flex justify-between items-center';
+        } else if (type === 'warning') {
+            notificationHeader.className = 'p-3 bg-yellow-500 text-white flex justify-between items-center';
+        } else {
+            notificationHeader.className = 'p-3 bg-primary text-white flex justify-between items-center';
+        }
+
+        notificationTitle.textContent = title;
+        notificationMessage.textContent = message;
+
+        // 显示通知
+        notification.classList.remove('translate-x-full');
+
+        // 5秒后自动关闭
+        setTimeout(() => {
+            notification.classList.add('translate-x-full');
+        }, 5000);
+    }
+</script>
+</body>
+</html>
