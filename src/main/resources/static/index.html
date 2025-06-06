@@ -393,7 +393,7 @@
 </div>
 
 <!-- 通知提示 -->
-<div id="notification" class="fixed top-4 right-4 max-w-xs bg-white rounded-lg shadow-lg overflow-hidden transform translate-x-full transition-transform duration-500 z-50">
+<div id="notification" class="fixed top-4 right-4 max-w-xs bg-white rounded-lg shadow-lg overflow-hidden transform translate-x-full transition-transform duration-500 z-50" style="right: -100%;">
     <div id="notificationHeader" class="p-3 bg-primary text-white flex justify-between items-center">
         <h3 id="notificationTitle" class="font-medium">通知</h3>
         <button id="closeNotification" class="text-white hover:text-gray-200 transition-colors">
@@ -433,6 +433,11 @@
 
     // DOM 加载完成后执行
     document.addEventListener('DOMContentLoaded', () => {
+        // 确保通知提示框初始为隐藏状态
+        const notification = document.getElementById('notification');
+        notification.classList.add('translate-x-full');
+        notification.style.right = '-100%';
+
         // 初始化选项卡切换
         document.getElementById('studentsTab').addEventListener('click', () => {
             document.getElementById('studentsTab').classList.add('text-primary', 'border-b-2', 'border-primary');
@@ -506,7 +511,7 @@
         });
 
         document.getElementById('closeNotification').addEventListener('click', () => {
-            document.getElementById('notification').classList.add('translate-x-full');
+            notification.classList.add('translate-x-full');
         });
 
         // 初始化表单提交事件
@@ -997,12 +1002,21 @@
 
         // 显示通知
         notification.classList.remove('translate-x-full');
+        notification.style.right = '1rem';
 
-        // 5秒后自动关闭
+        // 5 秒后自动关闭
         setTimeout(() => {
             notification.classList.add('translate-x-full');
+            notification.style.right = '-100%';
         }, 5000);
     }
+
+    // 关闭通知
+    document.getElementById('closeNotification').addEventListener('click', () => {
+        const notification = document.getElementById('notification');
+        notification.classList.add('translate-x-full');
+        notification.style.right = '-100%';
+    });
 </script>
 </body>
 </html>
