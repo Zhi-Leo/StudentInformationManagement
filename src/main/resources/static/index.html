@@ -52,20 +52,66 @@
                 </a>
             </div>
             <div class="flex items-center space-x-4">
+                <button id="classesTab" class="px-4 py-2 text-gray-500 font-medium hover:text-gray-700">
+                    <i class="fa fa-building mr-1"></i> 班级管理
+                </button>
                 <button id="studentsTab" class="px-4 py-2 text-primary font-medium border-b-2 border-primary">
                     <i class="fa fa-users mr-1"></i> 学生管理
                 </button>
                 <button id="teachersTab" class="px-4 py-2 text-gray-500 font-medium hover:text-gray-700">
                     <i class="fa fa-briefcase mr-1"></i> 教师管理
                 </button>
-                <!-- 新增退出按钮 -->
-                <button id="logoutBtn" class="px-4 py-2 bg-red-500 text-white font-medium rounded-md hover:bg-red-600">
-                    <i class="fa fa-sign-out mr-1"></i> 退出
-                </button>
             </div>
         </div>
     </div>
 </nav>
+
+<!-- 班级管理 (默认隐藏) -->
+<div id="classesSection" class="hidden">
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
+        <div class="bg-info p-4">
+            <h2 class="text-white text-xl font-bold flex items-center">
+                <i class="fa fa-building mr-2"></i> 班级列表
+                <button id="addClassBtn" class="ml-auto bg-white text-info px-4 py-1 rounded-md text-sm font-medium hover:bg-gray-100 transition-colors">
+                    <i class="fa fa-plus mr-1"></i> 添加班级
+                </button>
+            </h2>
+        </div>
+        <div class="p-4">
+            <div class="flex justify-between mb-4">
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+                        <i class="fa fa-search"></i>
+                    </span>
+                    <input type="text" id="classSearch" placeholder="搜索班级..." class="pl-10 block w-full rounded-md border-gray-300 shadow-sm focus:border-info focus:ring focus:ring-info/30 transition duration-200">
+                </div>
+                <button id="refreshClasses" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-1 rounded-md text-sm font-medium transition-colors">
+                    <i class="fa fa-refresh mr-1"></i> 刷新
+                </button>
+            </div>
+            <div id="classesTable" class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">班级 ID</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">班级名称</th>
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                    </tr>
+                    </thead>
+                    <tbody id="classesBody" class="bg-white divide-y divide-gray-200">
+                    <!-- 班级数据将通过 JavaScript 动态填充 -->
+                    <tr class="text-center">
+                        <td colspan="3" class="px-6 py-12 text-gray-500">
+                            <i class="fa fa-spinner fa-spin text-2xl mb-2"></i>
+                            <p>加载中...</p>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- 主要内容 -->
 <main class="flex-grow container mx-auto px-4 py-8">
@@ -439,6 +485,8 @@
         notification.style.right = '-100%';
 
         // 初始化选项卡切换
+
+
         document.getElementById('studentsTab').addEventListener('click', () => {
             document.getElementById('studentsTab').classList.add('text-primary', 'border-b-2', 'border-primary');
             document.getElementById('studentsTab').classList.remove('text-gray-500');
@@ -659,6 +707,238 @@
             </tr>
         `;
         }
+    }
+    // 模拟数据 - 班级
+    const mockClasses = [
+        { id: 'C2025001', name: '一年级一班' },
+        { id: 'C2025002', name: '一年级二班' }
+    ];
+
+    let originalClasses = [...mockClasses];
+
+    // DOM 加载完成后执行
+    document.addEventListener('DOMContentLoaded', () => {
+        // 初始化选项卡切换
+        document.getElementById('studentsTab').addEventListener('click', () => {
+            // 原有的学生选项卡点击逻辑
+        });
+
+        document.getElementById('teachersTab').addEventListener('click', () => {
+            // 原有的教师选项卡点击逻辑
+        });
+
+        document.getElementById('classesTab').addEventListener('click', () => {
+            document.getElementById('classesTab').classList.add('text-info', 'border-b-2', 'border-info');
+            document.getElementById('classesTab').classList.remove('text-gray-500');
+            document.getElementById('studentsTab').classList.remove('text-primary', 'border-b-2', 'border-primary');
+            document.getElementById('studentsTab').classList.add('text-gray-500');
+            document.getElementById('teachersTab').classList.remove('text-secondary', 'border-b-2', 'border-secondary');
+            document.getElementById('teachersTab').classList.add('text-gray-500');
+            document.getElementById('classesSection').classList.remove('hidden');
+            document.getElementById('studentsSection').classList.add('hidden');
+            document.getElementById('teachersSection').classList.add('hidden');
+
+            // 加载班级数据
+            loadClasses();
+        });
+
+        // 初始化模态框事件
+        document.getElementById('addClassBtn').addEventListener('click', () => {
+            document.getElementById('addClassModal').classList.remove('hidden');
+            document.getElementById('addClassForm').reset();
+        });
+
+        document.getElementById('closeClassModal').addEventListener('click', () => {
+            document.getElementById('addClassModal').classList.add('hidden');
+        });
+
+        document.getElementById('cancelAddClass').addEventListener('click', () => {
+            document.getElementById('addClassModal').classList.add('hidden');
+        });
+
+        document.getElementById('closeEditClassModal').addEventListener('click', () => {
+            document.getElementById('editClassModal').classList.add('hidden');
+        });
+
+        document.getElementById('cancelEditClass').addEventListener('click', () => {
+            document.getElementById('editClassModal').classList.add('hidden');
+        });
+
+        // 初始化表单提交事件
+        document.getElementById('addClassForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            addClass();
+        });
+
+        document.getElementById('editClassForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            updateClass();
+        });
+
+        // 初始化刷新按钮
+        document.getElementById('refreshClasses').addEventListener('click', loadClasses);
+
+        // 初始化搜索功能
+        document.getElementById('classSearch').addEventListener('input', () => {
+            filterClasses();
+        });
+
+        // 初始加载学生数据
+        loadStudents();
+    });
+
+    // 加载班级数据
+    function loadClasses() {
+        const classesBody = document.getElementById('classesBody');
+
+        if (originalClasses.length === 0) {
+            classesBody.innerHTML = `
+            <tr class="text-center">
+                <td colspan="3" class="px-6 py-12 text-gray-500">
+                    <i class="fa fa-inbox text-2xl mb-2"></i>
+                    <p>暂无班级数据</p>
+                </td>
+            </tr>
+        `;
+            return;
+        }
+
+        classesBody.innerHTML = '';
+        originalClasses.forEach(classInfo => {
+            const row = document.createElement('tr');
+            row.className = 'hover:bg-gray-50 transition-colors duration-150';
+            row.innerHTML = `
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${classInfo.id}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${classInfo.name}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <button onclick="editClass('${classInfo.id}')" class="text-indigo-600 hover:text-indigo-900 mr-3">
+                    <i class="fa fa-pencil"></i> 编辑
+                </button>
+                <button onclick="confirmDeleteClass('${classInfo.id}', '${classInfo.name}')" class="text-red-600 hover:text-red-900">
+                    <i class="fa fa-trash"></i> 删除
+                </button>
+            </td>
+        `;
+            classesBody.appendChild(row);
+        });
+    }
+
+    // 添加班级
+    function addClass() {
+        const id = document.getElementById('classId').value;
+        const name = document.getElementById('className').value;
+
+        // 检查班级编号是否已存在
+        const exists = originalClasses.some(classInfo => classInfo.id === id);
+        if (exists) {
+            showNotification('error', '失败', '班级编号已存在');
+            return;
+        }
+
+        const newClass = { id, name };
+        originalClasses.push(newClass);
+
+        showNotification('success', '成功', '班级添加成功');
+        document.getElementById('addClassModal').classList.add('hidden');
+        document.getElementById('addClassForm').reset();
+        loadClasses();
+    }
+
+    // 编辑班级
+    function editClass(id) {
+        const classInfo = originalClasses.find(classInfo => classInfo.id === id);
+        if (!classInfo) {
+            showNotification('error', '失败', '未找到该班级');
+            return;
+        }
+
+        document.getElementById('editClassId').value = classInfo.id;
+        document.getElementById('editClassName').value = classInfo.name;
+        document.getElementById('editClassModal').classList.remove('hidden');
+    }
+
+    // 更新班级
+    function updateClass() {
+        const id = document.getElementById('editClassId').value;
+        const name = document.getElementById('editClassName').value;
+
+        const index = originalClasses.findIndex(classInfo => classInfo.id === id);
+        if (index === -1) {
+            showNotification('error', '失败', '未找到该班级');
+            return;
+        }
+
+        originalClasses[index] = { id, name };
+
+        showNotification('success', '成功', '班级信息更新成功');
+        document.getElementById('editClassModal').classList.add('hidden');
+        loadClasses();
+    }
+
+    // 确认删除班级
+    function confirmDeleteClass(id, name) {
+        currentEntityType = 'class';
+        currentClassId = id;
+        document.getElementById('deleteMessage').textContent = `你确定要删除班级 "${name}" 吗？此操作不可撤销。`;
+        document.getElementById('confirmDeleteModal').classList.remove('hidden');
+    }
+
+    // 删除班级
+    function deleteClass() {
+        if (!currentClassId) return;
+
+        originalClasses = originalClasses.filter(classInfo => classInfo.id !== currentClassId);
+
+        showNotification('success', '成功', '班级删除成功');
+        loadClasses();
+    }
+
+    // 搜索班级
+    function filterClasses() {
+        const searchTerm = document.getElementById('classSearch').value.toLowerCase();
+
+        if (!searchTerm) {
+            loadClasses();
+            return;
+        }
+
+        const filteredClasses = originalClasses.filter(classInfo =>
+            classInfo.id.toLowerCase().includes(searchTerm) ||
+            classInfo.name.toLowerCase().includes(searchTerm)
+        );
+
+        const classesBody = document.getElementById('classesBody');
+
+        if (filteredClasses.length === 0) {
+            classesBody.innerHTML = `
+            <tr class="text-center">
+                <td colspan="3" class="px-6 py-12 text-gray-500">
+                    <i class="fa fa-search text-2xl mb-2"></i>
+                    <p>未找到匹配的班级</p>
+                </td>
+            </tr>
+        `;
+            return;
+        }
+
+        classesBody.innerHTML = '';
+        filteredClasses.forEach(classInfo => {
+            const row = document.createElement('tr');
+            row.className = 'hover:bg-gray-50 transition-colors duration-150';
+            row.innerHTML = `
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${classInfo.id}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${classInfo.name}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <button onclick="editClass('${classInfo.id}')" class="text-indigo-600 hover:text-indigo-900 mr-3">
+                    <i class="fa fa-pencil"></i> 编辑
+                </button>
+                <button onclick="confirmDeleteClass('${classInfo.id}', '${classInfo.name}')" class="text-red-600 hover:text-red-900">
+                    <i class="fa fa-trash"></i> 删除
+                </button>
+            </td>
+        `;
+            classesBody.appendChild(row);
+        });
     }
 
     // 添加学生

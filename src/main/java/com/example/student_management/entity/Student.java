@@ -11,17 +11,19 @@ public class Student {
     private int age; // 年龄
     private String sex; // 性别
     private double grade; // 成绩
+    private String clas; // 班级
 
     // 无参构造函数（必须）
     public Student() {}
 
     // 全参构造函数（可选）
-    public Student(String id, String name, int age, String sex, double grade) {
+    public Student(String id, String name, int age, String sex, double grade, String clas) {
         this.id = id;
         this.name = name;
         this.age = age;
         this.sex = sex;
         this.grade = grade;
+        this.clas = clas;
     }
 
     // Getters 和 Setters
@@ -35,6 +37,8 @@ public class Student {
     public void setSex(String sex) { this.sex = sex; }
     public double getGrade() { return grade; }
     public void setGrade(double grade) { this.grade = grade; }
+    public String getclas() { return clas; }
+    public void setclas(String clas) { this.clas = clas; }
 
     // toString() 方法（可选）
     @Override
@@ -45,6 +49,7 @@ public class Student {
                 ", age=" + age +
                 ", sex='" + sex + '\'' +
                 ", grade=" + grade +
+                ", clas='" + clas + '\'' +
                 '}';
     }
 }
