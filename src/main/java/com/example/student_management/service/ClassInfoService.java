@@ -13,6 +13,11 @@ public class ClassInfoService {
     @Autowired
     private ClassInfoRepository classInfoRepository;
 
+    public ClassInfo saveClass(ClassInfo classInfo) {
+        System.out.println("Saving class to database: " + classInfo);
+        return classInfoRepository.save(classInfo);
+    }
+
     // 获取所有班级
     public List<ClassInfo> getAllClasses() {
         return classInfoRepository.findAll();

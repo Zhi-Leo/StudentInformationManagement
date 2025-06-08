@@ -7,6 +7,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
+
 import java.util.List;
 
 @RestController
@@ -17,8 +23,9 @@ public class ClassInfoController {
 
     // 获取所有班级
     @GetMapping
-    public List<ClassInfo> getAllClasses() {
-        return classInfoService.getAllClasses();
+    public ResponseEntity<List<ClassInfo>> getAllClasses() {
+        List<ClassInfo> classes = classInfoService.getAllClasses();
+        return new ResponseEntity<>(classes, HttpStatus.OK);
     }
 
     // 根据 ID 获取班级
@@ -32,11 +39,15 @@ public class ClassInfoController {
         }
     }
 
-    // 添加班级
     @PostMapping
     public ResponseEntity<ClassInfo> addClass(@RequestBody ClassInfo classInfo) {
-        ClassInfo savedClass = classInfoService.addClass(classInfo);
-        return new ResponseEntity<>(savedClass, HttpStatus.CREATED);
+        System.out.println("Received class to add: " + classInfo);
+        ClassInfo savedClass = classInfoService.saveClass(classInfo);
+        if (savedClass != null) {
+            return new ResponseEntity<>(savedClass, HttpStatus.CREATED);
+        } else {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     // 更新班级
