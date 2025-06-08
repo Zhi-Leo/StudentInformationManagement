@@ -3,7 +3,9 @@ package com.example.student_management.service;
 import com.example.student_management.entity.ClassInfo;
 import com.example.student_management.repository.ClassInfoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -21,11 +23,29 @@ public class ClassInfoService {
         this.classInfoRepository = classInfoRepository;
     }
 
+    @Transactional // 确保操作原子性
     public ClassInfo saveClass(ClassInfo classInfo) {
-        System.out.println("Saving class to database: " + classInfo);
-        return classInfoRepository.save(classInfo);
-    }
+        logger.info("尝试添加班级: {}", classInfo);
 
+        // 1. 手动检查ID是否存在（可选，增强校验）
+        if (classInfoRepository.existsById(classInfo.getId())) {
+            logger.error("班级ID已存在: {}", classInfo.getId());
+            throw new IllegalArgumentException("班级ID已存在");
+        }
+
+        try {
+            // 2. 执行保存操作
+            return classInfoRepository.save(classInfo);
+        } catch (DataIntegrityViolationException e) {
+            // 3. 捕获数据库约束冲突（如主键重复）
+            logger.error("数据库约束冲突，班级ID: {}", classInfo.getId(), e);
+            throw new RuntimeException("班级ID已存在或数据格式错误");
+        } catch (Exception e) {
+            // 4. 捕获其他异常
+            logger.error("保存班级失败: {}", classInfo.getId(), e);
+            throw new RuntimeException("服务器内部错误，请重试");
+        }
+    }
     // 获取所有班级
     public List<ClassInfo> getAllClasses() {
         return classInfoRepository.findAll();

@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/classes")
@@ -38,13 +39,29 @@ public class ClassInfoController {
     }
 
     @PostMapping
-    public ResponseEntity<ClassInfo> addClass(@RequestBody ClassInfo classInfo) {
-        System.out.println("Received class to add: " + classInfo);
-        ClassInfo savedClass = classInfoService.saveClass(classInfo);
-        if (savedClass != null) {
-            return new ResponseEntity<>(savedClass, HttpStatus.CREATED);
-        } else {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+    public ResponseEntity<?> addClass(@RequestBody ClassInfo classInfo) {
+        try {
+            ClassInfo savedClass = classInfoService.saveClass(classInfo);
+            logger.info("班级添加成功: {}", savedClass);
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                    "success", true,
+                    "message", "班级添加成功",
+                    "data", savedClass
+            ));
+        } catch (IllegalArgumentException e) {
+            // ID已存在
+            logger.warn("添加班级失败: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                    "success", false,
+                    "error", e.getMessage()
+            ));
+        } catch (RuntimeException e) {
+            // 其他业务异常
+            logger.error("添加班级失败: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                    "success", false,
+                    "error", e.getMessage()
+            ));
         }
     }
 

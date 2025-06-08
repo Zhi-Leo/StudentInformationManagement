@@ -204,26 +204,16 @@
             const id = document.getElementById('classId').value;
             const name = document.getElementById('className').value;
 
-            // **新增：双重校验（前端内存 + 提示优化）**
-            if (originalClasses.some(classInfo => classInfo.id === id)) {
-                alert(`班级ID "${id}" 已存在于当前列表中，请更换！`);
+            // 1. 前端校验（可选，增强用户体验）
+            if (!id || !name) {
+                showNotification('error', '错误', '班级ID和名称不能为空');
                 return;
             }
 
-            // 发送请求前禁用按钮，防止重复提交
+            // 2. 禁用按钮，防止重复提交
             const submitButton = e.target.querySelector('button[type="submit"]');
             submitButton.disabled = true;
-            submitButton.textContent = "正在提交...";
-
-            // 检查班级编号是否已存在
-            const exists = originalClasses.some(classInfo => classInfo.id === id);
-            if (exists) {
-                alert('班级编号已存在');
-                return;
-            }
-
-            const newClass = { id, name };
-            console.log('Adding new class:', newClass);
+            submitButton.textContent = '正在提交...';
 
             fetch('/api/classes', {
                 method: 'POST',
@@ -231,25 +221,33 @@
                 body: JSON.stringify({ id, name })
             })
                 .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP错误：${response.status}`);
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        return response.json().then(errorData => {
+                            throw new Error(errorData.error || `HTTP错误 ${response.status}`);
+                        });
                     }
-                    return response.json();
                 })
+                // 修改添加班级的成功回调
                 .then(data => {
-                    // 成功后恢复按钮状态
-                    submitButton.disabled = false;
-                    submitButton.textContent = "添加班级";
-                    document.getElementById('addClassModal').classList.add('hidden');
-                    document.getElementById('addClassForm').reset();
+                    showNotification('success', '成功', '班级添加成功');
+
+                    // **修改：不再手动添加到originalClasses，而是重新加载列表**
                     loadClasses();
+
+                    // 关闭模态框
+                    const modal = document.getElementById('addClassModal');
+                    if (modal) modal.classList.add('hidden');
                 })
+
                 .catch(error => {
-                    // 失败后恢复按钮状态
+                    showNotification('error', '失败', error.message);
+                })
+                .finally(() => {
                     submitButton.disabled = false;
-                    submitButton.textContent = "添加班级";
-                    console.error('Error adding class:', error);
-                    showNotification('error', '失败', '班级添加失败: ' + error.message);
+                    submitButton.textContent = '添加班级';
+                    e.target.reset();
                 });
         });
 
@@ -288,6 +286,8 @@
                     console.error('添加班级失败:', error);
                 });
         });
+
+
         // 初始化刷新按钮
         document.getElementById('refreshClasses').addEventListener('click', loadClasses);
 
@@ -1131,45 +1131,7 @@
             });
     }
 
-    function addClass() {
-        const id = document.getElementById('classId').value;
-        const name = document.getElementById('className').value;
 
-        // 检查班级编号是否已存在
-        const exists = originalClasses.some(classInfo => classInfo.id === id);
-        if (exists) {
-            showNotification('error', '失败', '班级编号已存在');
-            return;
-        }
-
-        const newClass = { id, name };
-        console.log('Adding new class:', newClass);
-
-        fetch('/api/classes', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(newClass)
-        })
-            .then(response => {
-                console.log('Add class response status:', response.status);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                showNotification('success', '成功', '班级添加成功');
-                document.getElementById('addClassModal').classList.add('hidden');
-                document.getElementById('addClassForm').reset();
-                loadClasses();
-            })
-            .catch(error => {
-                console.error('Error adding class:', error);
-                showNotification('error', '失败', '班级添加失败: ' + error.message);
-            });
-    }
 
     // 确认删除班级
     function confirmDeleteClass(id, name) {
