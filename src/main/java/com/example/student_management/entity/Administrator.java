@@ -1,7 +1,5 @@
 package com.example.student_management.entity;
 
-//import javax.persistence.Entity;
-//import javax.persistence.Id;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 

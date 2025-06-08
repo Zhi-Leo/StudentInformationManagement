@@ -147,6 +147,36 @@
     </div>
 </div>
 
+<!-- 编辑班级模态框 -->
+<div id="editClassModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-md transform transition-all">
+        <div class="bg-info p-4 rounded-t-lg">
+            <h3 class="text-white text-lg font-bold flex items-center">
+                <i class="fa fa-pencil mr-2"></i> 编辑班级
+                <button id="closeEditClassModal" class="ml-auto text-white hover:text-gray-200">
+                    <i class="fa fa-times"></i>
+                </button>
+            </h3>
+        </div>
+        <div class="p-6">
+            <form id="editClassForm">
+                <div class="mb-4">
+                    <label for="editClassId" class="block text-sm font-medium text-gray-700 mb-1">班级 ID</label>
+                    <input type="text" id="editClassId" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-info focus:ring focus:ring-info/30 transition duration-200" readonly>
+                </div>
+                <div class="mb-4">
+                    <label for="editClassName" class="block text-sm font-medium text-gray-700 mb-1">班级名称</label>
+                    <input type="text" id="editClassName" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-info focus:ring focus:ring-info/30 transition duration-200" required>
+                </div>
+                <div class="flex justify-end space-x-4">
+                    <button type="button" id="cancelEditClass" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors">取消</button>
+                    <button type="submit" class="px-4 py-2 bg-info text-white rounded-md hover:bg-info/90 transition-colors">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         // 模拟班级数据
@@ -174,6 +204,17 @@
             const id = document.getElementById('classId').value;
             const name = document.getElementById('className').value;
 
+            // **新增：双重校验（前端内存 + 提示优化）**
+            if (originalClasses.some(classInfo => classInfo.id === id)) {
+                alert(`班级ID "${id}" 已存在于当前列表中，请更换！`);
+                return;
+            }
+
+            // 发送请求前禁用按钮，防止重复提交
+            const submitButton = e.target.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            submitButton.textContent = "正在提交...";
+
             // 检查班级编号是否已存在
             const exists = originalClasses.some(classInfo => classInfo.id === id);
             if (exists) {
@@ -182,11 +223,71 @@
             }
 
             const newClass = { id, name };
-            originalClasses.push(newClass);
-            document.getElementById('addClassModal').classList.add('hidden');
-            loadClasses();
+            console.log('Adding new class:', newClass);
+
+            fetch('/api/classes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, name })
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP错误：${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // 成功后恢复按钮状态
+                    submitButton.disabled = false;
+                    submitButton.textContent = "添加班级";
+                    document.getElementById('addClassModal').classList.add('hidden');
+                    document.getElementById('addClassForm').reset();
+                    loadClasses();
+                })
+                .catch(error => {
+                    // 失败后恢复按钮状态
+                    submitButton.disabled = false;
+                    submitButton.textContent = "添加班级";
+                    console.error('Error adding class:', error);
+                    showNotification('error', '失败', '班级添加失败: ' + error.message);
+                });
         });
 
+        // 假设存在编辑表单提交事件
+        document.getElementById('editClassForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const id = document.getElementById('editClassId').value;
+            const name = document.getElementById('editClassName').value;
+
+            const updatedClass = { id, name };
+            console.log('Updating class:', updatedClass);
+
+            fetch(`/api/classes`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newClass)
+            })
+                .then(response => {
+                    // 新增：打印完整响应状态码
+                    console.log('添加班级响应状态码:', response.status);
+                    // 严格判断状态码是否为 201（创建成功）
+                    if (response.status === 201) {
+                        return response.json(); // 解析成功响应
+                    } else {
+                        throw new Error(`请求失败，状态码: ${response.status}`); // 抛出异常以触发失败提示
+                    }
+                })
+                .then(data => {
+                    showNotification('success', '成功', '班级添加成功');
+                    document.getElementById('addClassModal').classList.add('hidden');
+                    document.getElementById('addClassForm').reset();
+                    loadClasses(); // 重新加载班级列表
+                })
+                .catch(error => {
+                    showNotification('error', '失败', '班级添加失败: ' + error.message);
+                    console.error('添加班级失败:', error);
+                });
+        });
         // 初始化刷新按钮
         document.getElementById('refreshClasses').addEventListener('click', loadClasses);
 
@@ -246,50 +347,7 @@
                 });
         }
 
-// 编辑班级
-        function editClass(id) {
-            // 找到对应的班级信息
-            const classInfo = originalClasses.find(classInfo => classInfo.id === id);
-            if (classInfo) {
-                // 填充编辑模态框的信息
-                document.getElementById('editClassId').value = classInfo.id;
-                document.getElementById('editClassName').value = classInfo.name;
-                // 显示编辑模态框
-                document.getElementById('editClassModal').classList.remove('hidden');
-            }
-        }
 
-// 确认删除班级
-        function confirmDeleteClass(id, name) {
-            currentEntityType = 'class';
-            currentClassId = id;
-            document.getElementById('deleteMessage').textContent = `你确定要删除班级 "${name}" 吗？此操作不可撤销。`;
-            document.getElementById('confirmDeleteModal').classList.remove('hidden');
-        }
-
-// 删除班级
-        function deleteClass() {
-            if (!currentClassId) return;
-
-            fetch(`/api/classes/${currentClassId}`, {
-                method: 'DELETE'
-            })
-                .then(response => {
-                    if (response.ok) {
-                        showNotification('success', '成功', '班级删除成功');
-                        // 更新前端的班级列表
-                        originalClasses = originalClasses.filter(classInfo => classInfo.id!== currentClassId);
-                        loadClasses();
-                        // 隐藏确认删除模态框
-                        document.getElementById('confirmDeleteModal').classList.add('hidden');
-                    } else {
-                        showNotification('error', '失败', '班级删除失败');
-                    }
-                })
-                .catch(error => {
-                    showNotification('error', '失败', '班级删除失败: ' + error.message);
-                });
-        }
 
         // 初始加载班级数据
         loadClasses();
@@ -739,7 +797,10 @@
             document.getElementById('editTeacherModal').classList.add('hidden');
         });
 
-        document.getElementById('cancelDelete').addEventListener('click', () => {
+        document.getElementById('confirmDelete').addEventListener('click', () => {
+            if (currentEntityType === 'class') {
+                deleteClass();
+            }
             document.getElementById('confirmDeleteModal').classList.add('hidden');
         });
 
@@ -1025,6 +1086,50 @@
             `;
             });
     }
+    // 编辑班级
+    function editClass(id) {
+        const classInfo = originalClasses.find(classInfo => classInfo.id === id);
+        console.log('找到的班级信息:', classInfo);
+        if (classInfo) {
+            document.getElementById('editClassId').value = classInfo.id;
+            document.getElementById('editClassName').value = classInfo.name;
+            // 显示编辑模态框
+            document.getElementById('editClassModal').classList.remove('hidden');
+        }
+    }
+
+    // 更新班级
+    function updateClass() {
+        const id = document.getElementById('editClassId').value;
+        const name = document.getElementById('editClassName').value;
+
+        const updatedClass = { id, name };
+        console.log('Updating class:', updatedClass);
+
+        fetch(`/api/classes/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(updatedClass)
+        })
+            .then(response => {
+                console.log('Update class response status:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                showNotification('success', '成功', '班级更新成功');
+                document.getElementById('editClassModal').classList.add('hidden');
+                loadClasses();
+            })
+            .catch(error => {
+                console.error('Error updating class:', error);
+                showNotification('error', '失败', '班级更新失败: ' + error.message);
+            });
+    }
 
     function addClass() {
         const id = document.getElementById('classId').value;
@@ -1066,69 +1171,43 @@
             });
     }
 
-    // 编辑班级
-    function editClass(id) {
-        const classInfo = originalClasses.find(classInfo => classInfo.id === id);
-        if (classInfo) {
-            document.getElementById('editClassId').value = classInfo.id;
-            document.getElementById('editClassName').value = classInfo.name;
-            // 显示编辑模态框
-            document.getElementById('editClassModal').classList.remove('hidden');
-        }
-    }
-
-    // 更新班级信息
-    function updateClass() {
-        const id = document.getElementById('editClassId').value;
-        const name = document.getElementById('editClassName').value;
-
-        // 发送 PUT 请求到后端
-        fetch(`/api/classes/${id}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ id, name })
-        })
-            .then(response => response.json())
-            .then(data => {
-                showNotification('success', '成功', '班级信息更新成功');
-                document.getElementById('editClassModal').classList.add('hidden');
-                loadClasses();
-            })
-            .catch(error => {
-                showNotification('error', '失败', '班级信息更新失败，请稍后重试');
-                console.error('更新班级信息失败:', error);
-            });
-    }
-
     // 确认删除班级
     function confirmDeleteClass(id, name) {
         currentEntityType = 'class';
         currentClassId = id;
+        console.log('确认删除班级，ID:', currentClassId); // 输出 ID 值
         document.getElementById('deleteMessage').textContent = `你确定要删除班级 "${name}" 吗？此操作不可撤销。`;
         document.getElementById('confirmDeleteModal').classList.remove('hidden');
     }
 
     // 删除班级
     function deleteClass() {
-        if (!currentClassId) return;
+        if (!currentClassId) {
+            console.log('currentClassId 未定义');
+            return;
+        }
+        console.log('开始删除班级，ID:', currentClassId); // 输出 ID 值
 
         fetch(`/api/classes/${currentClassId}`, {
             method: 'DELETE'
         })
             .then(response => {
+                console.log('删除班级响应状态码:', response.status);
                 if (response.ok) {
                     showNotification('success', '成功', '班级删除成功');
+                    originalClasses = originalClasses.filter(classInfo => classInfo.id!== currentClassId);
                     loadClasses();
+                    document.getElementById('confirmDeleteModal').classList.add('hidden');
                 } else {
                     showNotification('error', '失败', '班级删除失败');
                 }
             })
             .catch(error => {
                 showNotification('error', '失败', '班级删除失败: ' + error.message);
+                console.error('删除班级出错:', error);
             });
     }
+
     // 搜索班级
     function filterClasses() {
         const searchTerm = document.getElementById('classSearch').value.toLowerCase();
@@ -1165,11 +1244,11 @@
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${classInfo.id}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${classInfo.name}</td>
             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <button onclick="editClass('${classInfo.id}')" class="text-indigo-600 hover:text-indigo-900 mr-3">
-                    <i class="fa fa-pencil"></i> 编辑
-                </button>
+            <button onclick="editClass('${classInfo.id}')" class="text-indigo-600 hover:text-indigo-900 mr-3">
+                <i class="fa fa-pencil"></i> 编辑
+            </button>
                 <button onclick="confirmDeleteClass('${classInfo.id}', '${classInfo.name}')" class="text-red-600 hover:text-red-900">
-                    <i class="fa fa-trash"></i> 删除
+                <i class="fa fa-trash"></i> 删除
                 </button>
             </td>
         `;

@@ -26,7 +26,6 @@ public class StudentService {
 
     // 添加学生
     public Student addStudent(Student student) {
-
         return studentRepository.save(student); // save 方法可用于添加和更新
     }
 
