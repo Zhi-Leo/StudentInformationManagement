@@ -359,7 +359,7 @@
 <!-- 主要内容 -->
 <main class="flex-grow container mx-auto px-4 py-8">
     <!-- 学生管理 -->
-    <div id="studentsSection">
+    <div id="studentsSection" class="hidden"> <!-- 添加 hidden 类 -->
         <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
             <div class="bg-primary p-4">
                 <h2 class="text-white text-xl font-bold flex items-center">
@@ -731,26 +731,24 @@
 
 
         document.getElementById('studentsTab').addEventListener('click', () => {
+            // 隐藏所有模块
+            document.getElementById('classesSection').classList.add('hidden'); // 隐藏班级模块
+            document.getElementById('teachersSection').classList.add('hidden'); // 隐藏教师模块
+            // 显示学生模块并更新样式
             document.getElementById('studentsTab').classList.add('text-primary', 'border-b-2', 'border-primary');
             document.getElementById('studentsTab').classList.remove('text-gray-500');
-            document.getElementById('teachersTab').classList.remove('text-secondary', 'border-b-2', 'border-secondary');
-            document.getElementById('teachersTab').classList.add('text-gray-500');
             document.getElementById('studentsSection').classList.remove('hidden');
-            document.getElementById('teachersSection').classList.add('hidden');
-
-            // 加载学生数据
             loadStudents();
         });
 
         document.getElementById('teachersTab').addEventListener('click', () => {
+            // 隐藏所有模块
+            document.getElementById('classesSection').classList.add('hidden'); // 隐藏班级模块
+            document.getElementById('studentsSection').classList.add('hidden'); // 隐藏学生模块
+            // 显示教师模块并更新样式
             document.getElementById('teachersTab').classList.add('text-secondary', 'border-b-2', 'border-secondary');
             document.getElementById('teachersTab').classList.remove('text-gray-500');
-            document.getElementById('studentsTab').classList.remove('text-primary', 'border-b-2', 'border-primary');
-            document.getElementById('studentsTab').classList.add('text-gray-500');
             document.getElementById('teachersSection').classList.remove('hidden');
-            document.getElementById('studentsSection').classList.add('hidden');
-
-            // 加载教师数据
             loadTeachers();
         });
 
@@ -963,6 +961,17 @@
     let originalClasses = [...mockClasses];
 
     // DOM 加载完成后执行
+
+    document.getElementById('classesTab').addEventListener('click', () => {
+        // 隐藏学生和教师模块
+        document.getElementById('studentsSection').classList.add('hidden');
+        document.getElementById('teachersSection').classList.add('hidden');
+        // 显示班级模块并更新样式
+        document.getElementById('classesTab').classList.add('text-info', 'border-b-2', 'border-info');
+        document.getElementById('classesTab').classList.remove('text-gray-500');
+        document.getElementById('classesSection').classList.remove('hidden');
+        loadClasses();
+    });
     document.addEventListener('DOMContentLoaded', () => {
         // 初始化选项卡切换
         document.getElementById('studentsTab').addEventListener('click', () => {
