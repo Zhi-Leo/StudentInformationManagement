@@ -182,6 +182,22 @@
         // 模拟班级数据
         let originalClasses = [];
 
+// 在DOMContentLoaded事件中，添加事件委托
+        document.getElementById('classesBody').addEventListener('click', (e) => {
+            const target = e.target.closest('button');
+            if (!target) return;
+
+            const row = target.closest('tr');
+            const classId = row.cells[0].textContent;
+            const className = row.cells[1].textContent; // 从表格单元格取名称
+
+            if (target.classList.contains('edit-btn')) {
+                editClass(classId, className); // 传两个参数
+            } else if (target.classList.contains('delete-btn')) {
+                confirmDeleteClass(classId, className);
+            }
+        });
+
         // 初始化添加班级按钮点击事件
         document.getElementById('addClassBtn').addEventListener('click', () => {
             document.getElementById('addClassModal').classList.remove('hidden');
@@ -232,8 +248,7 @@
                 // 修改添加班级的成功回调
                 .then(data => {
                     showNotification('success', '成功', '班级添加成功');
-
-                    // **修改：不再手动添加到originalClasses，而是重新加载列表**
+                    originalClasses.push(data);
                     loadClasses();
 
                     // 关闭模态框
@@ -275,11 +290,12 @@
                         throw new Error(`请求失败，状态码: ${response.status}`); // 抛出异常以触发失败提示
                     }
                 })
+                // 在addClassForm提交事件中，确保数据立即更新
                 .then(data => {
                     showNotification('success', '成功', '班级添加成功');
+                    originalClasses.push(data); // 手动添加到数组
+                    loadClasses(); // 重新加载视图
                     document.getElementById('addClassModal').classList.add('hidden');
-                    document.getElementById('addClassForm').reset();
-                    loadClasses(); // 重新加载班级列表
                 })
                 .catch(error => {
                     showNotification('error', '失败', '班级添加失败: ' + error.message);
@@ -316,21 +332,21 @@
                     console.log('Received data:', data);
                     originalClasses = data;
                     classesBody.innerHTML = '';
+// 在loadClasses函数中，移除内联onclick事件
                     data.forEach(classInfo => {
                         const row = document.createElement('tr');
-                        row.className = 'hover:bg-gray-50 transition-colors duration-150';
                         row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${classInfo.id}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${classInfo.name}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button onclick="editClass('${classInfo.id}')" class="text-indigo-600 hover:text-indigo-900 mr-3">
-                            <i class="fa fa-pencil"></i> 编辑
-                        </button>
-                        <button onclick="confirmDeleteClass('${classInfo.id}', '${classInfo.name}')" class="text-red-600 hover:text-red-900">
-                            <i class="fa fa-trash"></i> 删除
-                        </button>
-                    </td>
-                `;
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${classInfo.id}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${classInfo.name}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <button onclick="editClass('${classInfo.id}', '${classInfo.name}')" class="text-indigo-600 hover:text-indigo-900 mr-3">
+                    <i class="fa fa-pencil"></i> 编辑
+                </button>
+                <button onclick="confirmDeleteClass('${classInfo.id}', '${classInfo.name}')" class="text-red-600 hover:text-red-900">
+                    <i class="fa fa-trash"></i> 删除
+                </button>
+            </td>
+        `;
                         classesBody.appendChild(row);
                     });
                 })
@@ -1095,17 +1111,21 @@
             });
     }
     // 编辑班级
-    function editClass(id) {
-        const classInfo = originalClasses.find(classInfo => classInfo.id === id);
-        console.log('找到的班级信息:', classInfo);
-        if (classInfo) {
-            document.getElementById('editClassId').value = classInfo.id;
-            document.getElementById('editClassName').value = classInfo.name;
-            // 显示编辑模态框
-            document.getElementById('editClassModal').classList.remove('hidden');
-        }
-    }
+    function editClass(id, name) {
+        // 直接使用传递的ID和名称，避免从originalClasses查找
+        console.log('编辑班级参数 - ID:', id, '名称:', name);
 
+        // 参数校验：若name为空，尝试从originalClasses中获取
+        if (!name) {
+            const classInfo = originalClasses.find(cls => cls.id === id);
+            name = classInfo?.name || '';
+            console.warn('从originalClasses中获取名称:', name);
+        }
+
+        document.getElementById('editClassId').value = id;
+        document.getElementById('editClassName').value = name;
+        document.getElementById('editClassModal').classList.remove('hidden');
+    }
     // 更新班级
     function updateClass() {
         const id = document.getElementById('editClassId').value;
@@ -1214,7 +1234,7 @@
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${classInfo.id}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${classInfo.name}</td>
             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-            <button onclick="editClass('${classInfo.id}')" class="text-indigo-600 hover:text-indigo-900 mr-3">
+            <button onclick="editClass('${classInfo.id}', '${classInfo.name}')" class="text-indigo-600 hover:text-indigo-900 mr-3">
                 <i class="fa fa-pencil"></i> 编辑
             </button>
                 <button onclick="confirmDeleteClass('${classInfo.id}', '${classInfo.name}')" class="text-red-600 hover:text-red-900">
