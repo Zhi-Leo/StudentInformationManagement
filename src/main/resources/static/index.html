@@ -843,13 +843,30 @@
         });
 
         document.getElementById('confirmDelete').addEventListener('click', () => {
-            if (currentEntityType === 'student') {
+            if (currentEntityType === 'class') {
+                deleteClass();
+            } else if (currentEntityType === 'student') {
                 deleteStudent();
             } else if (currentEntityType === 'teacher') {
                 deleteTeacher();
             }
             document.getElementById('confirmDeleteModal').classList.add('hidden');
+            resetDeleteState(); // 重置删除状态
         });
+        // 取消删除按钮事件（新增）
+        document.getElementById('cancelDelete').addEventListener('click', () => {
+            document.getElementById('confirmDeleteModal').classList.add('hidden');
+            resetDeleteState(); // 重置删除状态
+        });
+
+        // 重置删除相关状态（新增）
+        function resetDeleteState() {
+            currentEntityType = null;
+            currentStudentId = null;
+            currentTeacherId = null;
+            // 如果有班级ID变量，也需要重置
+            // currentClassId = null;
+        }
 
         // 初始化刷新按钮
         document.getElementById('refreshStudents').addEventListener('click', loadStudents);
