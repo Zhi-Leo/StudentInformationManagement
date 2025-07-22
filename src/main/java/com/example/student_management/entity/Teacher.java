@@ -13,7 +13,8 @@ public class Teacher {
     private String teaching;
     private String clas;
 
-    public Teacher() {}
+    public Teacher() {
+    }
 
     public Teacher(String id, String name, int age, String sex, String teaching, String clas) {
         this.id = id;
@@ -24,18 +25,53 @@ public class Teacher {
         this.clas = clas;
     }
 
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-    public int getAge() { return age; }
-    public void setAge(int age) { this.age = age; }
-    public String getSex() { return sex; }
-    public void setSex(String sex) { this.sex = sex; }
-    public String getTeaching() { return teaching; }
-    public void setTeaching(String teaching) { this.teaching = teaching; }
-    public String getclas() { return clas; }
-    public void setclas(String clas) { this.clas = clas; }
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public int getAge() {
+        return age;
+    }
+
+    public void setAge(int age) {
+        this.age = age;
+    }
+
+    public String getSex() {
+        return sex;
+    }
+
+    public void setSex(String sex) {
+        this.sex = sex;
+    }
+
+    public String getTeaching() {
+        return teaching;
+    }
+
+    public void setTeaching(String teaching) {
+        this.teaching = teaching;
+    }
+
+    public String getclas() {
+        return clas;
+    }
+
+    public void setclas(String clas) {
+        this.clas = clas;
+    }
 
     @Override
     public String toString() {

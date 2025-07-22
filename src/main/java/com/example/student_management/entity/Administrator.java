@@ -9,7 +9,8 @@ public class Administrator {
     private String uid;
     private String upass;
 
-    public Administrator() {}
+    public Administrator() {
+    }
 
     public Administrator(String uid, String upass) {
         this.uid = uid;

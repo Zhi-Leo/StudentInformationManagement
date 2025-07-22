@@ -61,9 +61,11 @@ function initClassEvents() {
         const row = target.closest('tr');
         const classId = row.cells[0].textContent;
         const className = row.cells[1].textContent;
+        const headTeacher = row.cells[2].textContent;
+        const number = row.cells[3].textContent;
 
         if (target.classList.contains('fa-pencil') || target.textContent.includes('编辑')) {
-            editClass(classId, className);
+            editClass(classId, className, headTeacher, number);
         } else if (target.classList.contains('fa-trash') || target.textContent.includes('删除')) {
             // 调用共用删除函数（传递类型、ID、名称）
             window.confirmDelete('class', classId, className);
@@ -76,7 +78,7 @@ function loadClasses() {
     const classesBody = document.getElementById('classesBody');
     classesBody.innerHTML = `
         <tr class="text-center">
-            <td colspan="3" class="px-6 py-12 text-gray-500">
+            <td colspan="5" class="px-6 py-12 text-gray-500">
                 <i class="fa fa-spinner fa-spin text-2xl mb-2"></i>
                 <p>加载中...</p>
             </td>
@@ -95,7 +97,7 @@ function loadClasses() {
         .catch(error => {
             classesBody.innerHTML = `
                 <tr class="text-center">
-                    <td colspan="3" class="px-6 py-12 text-gray-500">
+                    <td colspan="5" class="px-6 py-12 text-gray-500">
                         <i class="fa fa-exclamation-triangle text-2xl mb-2"></i>
                         <p>加载失败: ${error.message}</p>
                     </td>
@@ -112,7 +114,7 @@ function renderClasses(classes) {
     if (classes.length === 0) {
         classesBody.innerHTML = `
             <tr class="text-center">
-                <td colspan="3" class="px-6 py-12 text-gray-500">
+                <td colspan="5" class="px-6 py-12 text-gray-500">
                     <i class="fa fa-folder-open text-2xl mb-2"></i>
                     <p>暂无班级数据</p>
                 </td>
@@ -127,6 +129,8 @@ function renderClasses(classes) {
         row.innerHTML = `
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${classInfo.id}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${classInfo.name}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${classInfo.headTeacher}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${classInfo.studentCount}</td>
             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <button class="text-indigo-600 hover:text-indigo-900 mr-3">
                     <i class="fa fa-pencil"></i> 编辑
@@ -144,17 +148,19 @@ function renderClasses(classes) {
 function addClass() {
     const id = document.getElementById('classId').value.trim();
     const name = document.getElementById('className').value.trim();
+    const headTeacher = document.getElementById('headTeacher').value.trim();
+    const studentCount = parseInt(document.getElementById('classNumber').value);
 
     // 前端校验
-    if (!id || !name) {
-        window.showNotification('error', '错误', '班级ID和名称不能为空');
+    if (!id || !name || !headTeacher || isNaN(studentCount)) {
+        window.showNotification('error', '错误', '班级ID、名称、班主任和班级人数不能为空');
         return;
     }
 
     fetch('/api/classes', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, name })
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({id, name, headTeacher, studentCount})
     })
         .then(response => {
             if (!response.ok) throw new Error('添加失败，可能ID已存在');
@@ -172,9 +178,11 @@ function addClass() {
 }
 
 // 编辑班级
-function editClass(id, name) {
+function editClass(id, name, headTeacher, number) {
     document.getElementById('editClassId').value = id;
     document.getElementById('editClassName').value = name;
+    document.getElementById('editHeadTeacher').value = headTeacher;
+    document.getElementById('editClassNumber').value = number;
     document.getElementById('editClassModal').classList.remove('hidden');
 }
 
@@ -182,16 +190,18 @@ function editClass(id, name) {
 function updateClass() {
     const id = document.getElementById('editClassId').value;
     const name = document.getElementById('editClassName').value.trim();
+    const headTeacher = document.getElementById('editHeadTeacher').value.trim();
+    const studentCount = parseInt(document.getElementById('editClassNumber').value);
 
-    if (!name) {
-        window.showNotification('error', '错误', '班级名称不能为空');
+    if (!name || !headTeacher || isNaN(studentCount)) {
+        window.showNotification('error', '错误', '班级名称、班主任和班级人数不能为空');
         return;
     }
 
     fetch(`/api/classes/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, name })
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({id, name, headTeacher, studentCount})
     })
         .then(response => {
             if (!response.ok) throw new Error('更新失败');
@@ -211,7 +221,7 @@ function updateClass() {
 }
 
 // 核心：删除班级（修正函数命名和API路径）
-window.deleteClass = function(id) {
+window.deleteClass = function (id) {
     console.log('[删除班级] ID:', id);
 
     if (!id) {
@@ -251,7 +261,8 @@ function filterClasses() {
     const searchTerm = document.getElementById('classSearch').value.toLowerCase();
     const filtered = originalClasses.filter(c =>
         c.id.toLowerCase().includes(searchTerm) ||
-        c.name.toLowerCase().includes(searchTerm)
+        c.name.toLowerCase().includes(searchTerm) ||
+        c.headTeacher.toLowerCase().includes(searchTerm)
     );
     renderClasses(filtered);
 }

@@ -179,12 +179,12 @@ function initDeleteModal() {
 }
 
 // 全局共用：显示确认删除模态框
-window.confirmDelete = function(entityType, id, name) {
+window.confirmDelete = function (entityType, id, name) {
     console.log('[确认删除] 类型:', entityType, 'ID:', id, '名称:', name);
 
     // 验证参数
     if (!entityType || !id || !name) {
-        console.error('confirmDelete 参数缺失:', { entityType, id, name });
+        console.error('confirmDelete 参数缺失:', {entityType, id, name});
         window.showNotification('error', '操作失败', '删除参数不完整');
         return;
     }
@@ -193,7 +193,7 @@ window.confirmDelete = function(entityType, id, name) {
     currentId = id;
 
     // 设置删除提示文本
-    const entityNameMap = { 'teacher': '教师', 'student': '学生', 'class': '班级' };
+    const entityNameMap = {'teacher': '教师', 'student': '学生', 'class': '班级'};
     const entityName = entityNameMap[entityType] || '记录';
     document.getElementById('deleteMessage').textContent = `你确定要删除${entityName}"${name}"吗？此操作不可撤销。`;
 
@@ -202,7 +202,7 @@ window.confirmDelete = function(entityType, id, name) {
 };
 
 // 全局共用：显示通知
-window.showNotification = function(type, title, message) {
+window.showNotification = function (type, title, message) {
     const notification = document.getElementById('notification');
     const icon = document.getElementById('notificationIcon');
     const titleEl = document.getElementById('notificationTitle');
@@ -210,9 +210,9 @@ window.showNotification = function(type, title, message) {
 
     // 设置样式
     const styles = {
-        success: { icon: 'fa-check-circle', bg: 'bg-green-50 text-green-700 border-l-4 border-green-400' },
-        error: { icon: 'fa-exclamation-circle', bg: 'bg-red-50 text-red-700 border-l-4 border-red-400' },
-        warning: { icon: 'fa-exclamation-triangle', bg: 'bg-yellow-50 text-yellow-700 border-l-4 border-yellow-400' }
+        success: {icon: 'fa-check-circle', bg: 'bg-green-50 text-green-700 border-l-4 border-green-400'},
+        error: {icon: 'fa-exclamation-circle', bg: 'bg-red-50 text-red-700 border-l-4 border-red-400'},
+        warning: {icon: 'fa-exclamation-triangle', bg: 'bg-yellow-50 text-yellow-700 border-l-4 border-yellow-400'}
     };
     notification.className = `fixed top-4 right-4 z-50 max-w-sm rounded-lg shadow-lg p-4 ${styles[type].bg} transform transition-all duration-300`;
     icon.innerHTML = `<i class="fa ${styles[type].icon}"></i>`;

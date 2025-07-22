@@ -54,7 +54,6 @@ function initTeacherEvents() {
         if (target.classList.contains('fa-pencil') || target.textContent.includes('编辑')) {
             editTeacher(id);
         } else if (target.classList.contains('fa-trash') || target.textContent.includes('删除')) {
-            // 调用共用删除函数（传递类型、ID、名称）
             window.confirmDelete('teacher', id, name);
         }
     });
@@ -65,7 +64,7 @@ function loadTeachers() {
     const teachersBody = document.getElementById('teachersBody');
     teachersBody.innerHTML = `
         <tr class="text-center">
-            <td colspan="6" class="px-6 py-12 text-gray-500">
+            <td colspan="7" class="px-6 py-12 text-gray-500">
                 <i class="fa fa-spinner fa-spin text-2xl mb-2"></i>
                 <p>加载中...</p>
             </td>
@@ -84,7 +83,7 @@ function loadTeachers() {
         .catch(error => {
             teachersBody.innerHTML = `
                 <tr class="text-center">
-                    <td colspan="6" class="px-6 py-12 text-gray-500">
+                    <td colspan="7" class="px-6 py-12 text-gray-500">
                         <i class="fa fa-exclamation-triangle text-2xl mb-2"></i>
                         <p>加载失败: ${error.message}</p>
                     </td>
@@ -93,7 +92,7 @@ function loadTeachers() {
         });
 }
 
-// 渲染教师表格
+// 渲染教师表格（新增班级列）
 function renderTeachers(teachers) {
     const teachersBody = document.getElementById('teachersBody');
     teachersBody.innerHTML = '';
@@ -101,7 +100,7 @@ function renderTeachers(teachers) {
     if (teachers.length === 0) {
         teachersBody.innerHTML = `
             <tr class="text-center">
-                <td colspan="6" class="px-6 py-12 text-gray-500">
+                <td colspan="7" class="px-6 py-12 text-gray-500">
                     <i class="fa fa-users text-2xl mb-2"></i>
                     <p>暂无教师数据</p>
                 </td>
@@ -116,6 +115,7 @@ function renderTeachers(teachers) {
         row.innerHTML = `
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${teacher.id}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${teacher.name}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${teacher.clas || ''}</td> <!-- 班级列 -->
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${teacher.age}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${teacher.sex}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${teacher.teaching}</td>
@@ -132,17 +132,18 @@ function renderTeachers(teachers) {
     });
 }
 
-// 添加教师
+// 添加教师（包含班级字段）
 function addTeacher() {
     const id = document.getElementById('teacherId').value.trim();
     const name = document.getElementById('teacherName').value.trim();
+    const clas = document.getElementById('teacherClass').value.trim(); // 班级字段
     const age = parseInt(document.getElementById('teacherAge').value);
     const sex = document.getElementById('teacherSex').value;
-    const teaching = document.getElementById('teacherTeaching').value.trim(); // 教授科目
+    const teaching = document.getElementById('teacherTeaching').value.trim();
 
-    // 校验（教师年龄范围通常为20-70岁）
-    if (!id || !name || !teaching || isNaN(age) || age < 20 || age > 70) {
-        window.showNotification('error', '错误', '请输入有效的教师信息（年龄20-70岁，科目必填）');
+    // 校验
+    if (!id || !name || !clas || !teaching || isNaN(age) || age < 20 || age > 70) {
+        window.showNotification('error', '错误', '请输入有效的教师信息（班级和科目必填，年龄20-70岁）');
         return;
     }
 
@@ -152,8 +153,8 @@ function addTeacher() {
 
     fetch('/api/teachers', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, name, age, sex, teaching })
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({id, name, clas, age, sex, teaching}) // 包含班级字段
     })
         .then(response => {
             if (!response.ok) throw new Error('添加失败，可能ID已存在');
@@ -174,7 +175,7 @@ function addTeacher() {
         });
 }
 
-// 编辑教师
+// 编辑教师（包含班级字段）
 function editTeacher(id) {
     const teacher = originalTeachers.find(t => t.id === id);
     if (!teacher) {
@@ -182,31 +183,35 @@ function editTeacher(id) {
         return;
     }
 
+    // 填充编辑表单，包含班级字段
     document.getElementById('editTeacherId').value = teacher.id;
     document.getElementById('editTeacherName').value = teacher.name;
+    document.getElementById('editTeacherClass').value = teacher.clas || ''; // 班级字段
     document.getElementById('editTeacherAge').value = teacher.age;
     document.getElementById('editTeacherSex').value = teacher.sex;
-    document.getElementById('editTeacherTeaching').value = teacher.teaching; // 回显教授科目
+    document.getElementById('editTeacherTeaching').value = teacher.teaching;
     document.getElementById('editTeacherModal').classList.remove('hidden');
 }
 
-// 更新教师
+// 更新教师（包含班级字段）
 function updateTeacher() {
     const id = document.getElementById('editTeacherId').value;
     const name = document.getElementById('editTeacherName').value.trim();
+    const clas = document.getElementById('editTeacherClass').value.trim(); // 班级字段
     const age = parseInt(document.getElementById('editTeacherAge').value);
     const sex = document.getElementById('editTeacherSex').value;
     const teaching = document.getElementById('editTeacherTeaching').value.trim();
 
-    if (!name || !teaching || isNaN(age) || age < 20 || age > 70) {
-        window.showNotification('error', '错误', '请输入有效的教师信息（年龄20-70岁，科目必填）');
+    // 校验
+    if (!name || !clas || !teaching || isNaN(age) || age < 20 || age > 70) {
+        window.showNotification('error', '错误', '请输入有效的教师信息（班级和科目必填，年龄20-70岁）');
         return;
     }
 
     fetch(`/api/teachers/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, name, age, sex, teaching })
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({id, name, clas, age, sex, teaching}) // 包含班级字段
     })
         .then(response => {
             if (!response.ok) throw new Error('更新失败');
@@ -224,10 +229,8 @@ function updateTeacher() {
         });
 }
 
-// 核心：删除教师（适配共用逻辑）
-window.deleteTeacher = function(id) {
-    console.log('[删除教师] ID:', id);
-
+// 删除教师
+window.deleteTeacher = function (id) {
     if (!id) {
         window.showNotification('error', '错误', '未找到教师ID');
         return;
@@ -247,7 +250,7 @@ window.deleteTeacher = function(id) {
         });
 };
 
-// 搜索过滤教师
+// 搜索过滤教师（支持班级搜索）
 function filterTeachers() {
     const searchTerm = document.getElementById('teacherSearch').value.toLowerCase().trim();
 
@@ -259,8 +262,9 @@ function filterTeachers() {
     const filteredTeachers = originalTeachers.filter(teacher => {
         return teacher.id.toLowerCase().includes(searchTerm) ||
             teacher.name.toLowerCase().includes(searchTerm) ||
+            (teacher.clas && teacher.clas.toLowerCase().includes(searchTerm)) || // 搜索班级
             teacher.sex.toLowerCase().includes(searchTerm) ||
-            teacher.teaching.toLowerCase().includes(searchTerm) || // 支持科目搜索
+            teacher.teaching.toLowerCase().includes(searchTerm) ||
             (teacher.age && teacher.age.toString().includes(searchTerm));
     });
 

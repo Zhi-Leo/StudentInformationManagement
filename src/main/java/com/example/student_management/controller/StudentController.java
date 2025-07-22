@@ -1,4 +1,5 @@
 package com.example.student_management.controller;
+
 import com.example.student_management.entity.Student;
 import com.example.student_management.service.StudentService;
 import org.springframework.beans.factory.annotation.Autowired;

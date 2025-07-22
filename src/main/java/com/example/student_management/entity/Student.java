@@ -14,7 +14,8 @@ public class Student {
     private String clas; // 班级
 
     // 无参构造函数（必须）
-    public Student() {}
+    public Student() {
+    }
 
     // 全参构造函数（可选）
     public Student(String id, String name, int age, String sex, double grade, String clas) {
@@ -27,18 +28,53 @@ public class Student {
     }
 
     // Getters 和 Setters
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-    public int getAge() { return age; }
-    public void setAge(int age) { this.age = age; }
-    public String getSex() { return sex; }
-    public void setSex(String sex) { this.sex = sex; }
-    public double getGrade() { return grade; }
-    public void setGrade(double grade) { this.grade = grade; }
-    public String getclas() { return clas; }
-    public void setclas(String clas) { this.clas = clas; }
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public int getAge() {
+        return age;
+    }
+
+    public void setAge(int age) {
+        this.age = age;
+    }
+
+    public String getSex() {
+        return sex;
+    }
+
+    public void setSex(String sex) {
+        this.sex = sex;
+    }
+
+    public double getGrade() {
+        return grade;
+    }
+
+    public void setGrade(double grade) {
+        this.grade = grade;
+    }
+
+    public String getclas() {
+        return clas;
+    }
+
+    public void setclas(String clas) {
+        this.clas = clas;
+    }
 
     // toString() 方法（可选）
     @Override

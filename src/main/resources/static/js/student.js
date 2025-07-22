@@ -4,7 +4,41 @@ let originalStudents = [];
 document.addEventListener('DOMContentLoaded', () => {
     initStudentEvents();
     loadStudents();
+    // 加载导航栏（如果需要）
+    loadNavbar();
 });
+
+// 加载导航栏（复用逻辑）
+function loadNavbar() {
+    fetch('index.html')
+        .then(res => res.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const tpl = doc.getElementById('navbarTpl');
+            if (tpl && document.getElementById('navbarContainer')) {
+                document.getElementById('navbarContainer').innerHTML = tpl.innerHTML;
+                initNavbar();
+            }
+        })
+        .catch(err => console.error('加载导航栏失败:', err));
+}
+
+// 初始化导航栏
+function initNavbar() {
+    const studentsTab = document.getElementById('studentsTab');
+    if (studentsTab) {
+        studentsTab.classList.add('text-primary', 'border-b-2', 'border-primary');
+        studentsTab.classList.remove('text-gray-500');
+    }
+    // 退出登录事件
+    document.getElementById('logoutBtn')?.addEventListener('click', () => {
+        if (confirm('确定退出登录吗？')) {
+            localStorage.removeItem('isLoggedIn');
+            window.location.href = 'login.html';
+        }
+    });
+}
 
 // 初始化事件监听
 function initStudentEvents() {
@@ -21,10 +55,11 @@ function initStudentEvents() {
     });
 
     // 模态框控制（编辑学生）
-    document.getElementById('closeEditStudentModal')?.addEventListener('click', () => {
+    document.getElementById('cancelEditStudent')?.addEventListener('click', () => {
         document.getElementById('editStudentModal').classList.add('hidden');
     });
-    document.getElementById('cancelEditStudent')?.addEventListener('click', () => {
+    // 关闭编辑模态框（假设存在关闭按钮）
+    document.querySelector('#editStudentModal .fa-times')?.parentElement?.addEventListener('click', () => {
         document.getElementById('editStudentModal').classList.add('hidden');
     });
 
@@ -49,13 +84,11 @@ function initStudentEvents() {
 
         const row = target.closest('tr');
         const id = row.cells[0].textContent;
-        const name = row.cells[1].textContent;
 
         if (target.classList.contains('fa-pencil') || target.textContent.includes('编辑')) {
             editStudent(id);
         } else if (target.classList.contains('fa-trash') || target.textContent.includes('删除')) {
-            // 调用共用删除函数（传递类型、ID、名称）
-            window.confirmDelete('student', id, name);
+            window.confirmDelete('student', id, row.cells[2].textContent);
         }
     });
 }
@@ -65,7 +98,7 @@ function loadStudents() {
     const studentsBody = document.getElementById('studentsBody');
     studentsBody.innerHTML = `
         <tr class="text-center">
-            <td colspan="6" class="px-6 py-12 text-gray-500">
+            <td colspan="7" class="px-6 py-12 text-gray-500">
                 <i class="fa fa-spinner fa-spin text-2xl mb-2"></i>
                 <p>加载中...</p>
             </td>
@@ -84,7 +117,7 @@ function loadStudents() {
         .catch(error => {
             studentsBody.innerHTML = `
                 <tr class="text-center">
-                    <td colspan="6" class="px-6 py-12 text-gray-500">
+                    <td colspan="7" class="px-6 py-12 text-gray-500">
                         <i class="fa fa-exclamation-triangle text-2xl mb-2"></i>
                         <p>加载失败: ${error.message}</p>
                     </td>
@@ -101,7 +134,7 @@ function renderStudents(students) {
     if (students.length === 0) {
         studentsBody.innerHTML = `
             <tr class="text-center">
-                <td colspan="6" class="px-6 py-12 text-gray-500">
+                <td colspan="7" class="px-6 py-12 text-gray-500">
                     <i class="fa fa-users text-2xl mb-2"></i>
                     <p>暂无学生数据</p>
                 </td>
@@ -115,6 +148,7 @@ function renderStudents(students) {
         row.className = 'hover:bg-gray-50 transition-colors duration-150';
         row.innerHTML = `
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${student.id}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${student.clas || ''}</td> <!-- 班级列 -->
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${student.name}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${student.age}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${student.sex}</td>
@@ -135,14 +169,15 @@ function renderStudents(students) {
 // 添加学生
 function addStudent() {
     const id = document.getElementById('studentId').value.trim();
+    const clas = document.getElementById('studentClas').value.trim(); // 班级字段
     const name = document.getElementById('studentName').value.trim();
     const age = parseInt(document.getElementById('studentAge').value);
     const sex = document.getElementById('studentSex').value;
     const grade = parseFloat(document.getElementById('studentGrade').value);
 
     // 校验
-    if (!id || !name || isNaN(age) || age < 5 || age > 100 || isNaN(grade) || grade < 0 || grade > 100) {
-        window.showNotification('error', '错误', '请输入有效的学生信息');
+    if (!id || !clas || !name || isNaN(age) || age < 5 || age > 100 || isNaN(grade) || grade < 0 || grade > 100) {
+        window.showNotification('error', '错误', '请输入有效的学生信息（班级不能为空）');
         return;
     }
 
@@ -152,8 +187,8 @@ function addStudent() {
 
     fetch('/api/students', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, name, age, sex, grade })
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({id, clas, name, age, sex, grade}) // 包含班级字段
     })
         .then(response => {
             if (!response.ok) throw new Error('添加失败，可能ID已存在');
@@ -182,7 +217,9 @@ function editStudent(id) {
         return;
     }
 
+    // 填充表单数据
     document.getElementById('editStudentId').value = student.id;
+    document.getElementById('editStudentClas').value = student.clas || ''; // 班级字段
     document.getElementById('editStudentName').value = student.name;
     document.getElementById('editStudentAge').value = student.age;
     document.getElementById('editStudentSex').value = student.sex;
@@ -193,20 +230,22 @@ function editStudent(id) {
 // 更新学生
 function updateStudent() {
     const id = document.getElementById('editStudentId').value;
+    const clas = document.getElementById('editStudentClas').value.trim(); // 班级字段
     const name = document.getElementById('editStudentName').value.trim();
     const age = parseInt(document.getElementById('editStudentAge').value);
     const sex = document.getElementById('editStudentSex').value;
     const grade = parseFloat(document.getElementById('editStudentGrade').value);
 
-    if (!name || isNaN(age) || age < 5 || age > 100 || isNaN(grade) || grade < 0 || grade > 100) {
-        window.showNotification('error', '错误', '请输入有效的学生信息');
+    // 校验
+    if (!clas || !name || isNaN(age) || age < 5 || age > 100 || isNaN(grade) || grade < 0 || grade > 100) {
+        window.showNotification('error', '错误', '请输入有效的学生信息（班级不能为空）');
         return;
     }
 
     fetch(`/api/students/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, name, age, sex, grade })
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({id, clas, name, age, sex, grade}) // 包含班级字段
     })
         .then(response => {
             if (!response.ok) throw new Error('更新失败');
@@ -224,12 +263,8 @@ function updateStudent() {
         });
 }
 
-// 核心：删除学生（适配共用逻辑，使用全局currentId）
-// 示例：student.js 中的删除函数
-window.deleteStudent = function(id) {
-    // 使用传入的ID而非全局变量
-    console.log('[删除学生] ID:', id);
-
+// 删除学生
+window.deleteStudent = function (id) {
     if (!id) {
         window.showNotification('error', '错误', '未找到学生ID');
         return;
@@ -259,6 +294,7 @@ function filterStudents() {
 
     const filteredStudents = originalStudents.filter(student => {
         return student.id.toLowerCase().includes(searchTerm) ||
+            (student.clas && student.clas.toLowerCase().includes(searchTerm)) || // 搜索班级
             student.name.toLowerCase().includes(searchTerm) ||
             student.sex.toLowerCase().includes(searchTerm) ||
             (student.age && student.age.toString().includes(searchTerm)) ||
@@ -267,3 +303,18 @@ function filterStudents() {
 
     renderStudents(filteredStudents);
 }
+
+// 通知提示（复用）
+window.showNotification = function (type, title, message) {
+    // 假设index.js中已实现通知逻辑，若未实现可添加：
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 p-4 rounded-md shadow-lg ${
+        type === 'success' ? 'bg-green-500' : 'bg-red-500'
+    } text-white z-50`;
+    notification.innerHTML = `
+        <strong>${title}</strong>
+        <p>${message}</p>
+    `;
+    document.body.appendChild(notification);
+    setTimeout(() => notification.remove(), 3000);
+};
