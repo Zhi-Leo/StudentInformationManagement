@@ -32,6 +32,13 @@
                 content-visibility: auto;
             }
         }
+        body {
+            /* 设置背景图 */
+            background-image: url('../唯美少女 马尾辫4K动漫壁纸3840_2160_彼岸图网.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen flex flex-col">
@@ -41,12 +48,12 @@
 <!-- 教师管理内容 -->
 <main class="flex-grow container mx-auto px-4 py-8">
     <div id="teachersSection">
-        <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
+        <div class="bg-white/80 rounded-lg shadow-lg overflow-hidden mb-8">
             <div class="bg-secondary p-4">
-                <h2 class="text-white text-xl font-bold flex items-center">
+                <h2 class="text-white/90 text-xl font-bold flex items-center">
                     <i class="fa fa-briefcase mr-2"></i> 教师列表
                     <button id="addTeacherBtn"
-                            class="ml-auto bg-white text-secondary px-4 py-1 rounded-md text-sm font-medium hover:bg-gray-100 transition-colors">
+                            class="ml-auto bg-white/80 text-secondary px-4 py-1 rounded-md text-sm font-medium hover:bg-gray-100 transition-colors">
                         <i class="fa fa-plus mr-1"></i> 添加教师
                     </button>
                 </h2>
@@ -101,7 +108,7 @@
                             </th>
                         </tr>
                         </thead>
-                        <tbody id="teachersBody" class="bg-white divide-y divide-gray-200">
+                        <tbody id="teachersBody" class="bg-white/80 divide-y divide-gray-200">
                         <tr class="text-center">
                             <td colspan="7" class="px-6 py-12 text-gray-500">
                                 <i class="fa fa-spinner fa-spin text-2xl mb-2"></i>
@@ -118,11 +125,11 @@
 
 <!-- 添加教师模态框（新增班级输入框） -->
 <div id="addTeacherModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-    <div class="bg-white rounded-lg shadow-xl w-full max-w-md transform transition-all">
+    <div class="bg-white/80 rounded-lg shadow-xl w-full max-w-md transform transition-all">
         <div class="bg-secondary p-4 rounded-t-lg">
-            <h3 class="text-white text-lg font-bold flex items-center">
+            <h3 class="text-white/80 text-lg font-bold flex items-center">
                 <i class="fa fa-user-plus mr-2"></i> 添加教师
-                <button id="closeTeacherModal" class="ml-auto text-white hover:text-gray-200">
+                <button id="closeTeacherModal" class="ml-auto text-white/80 hover:text-gray-200">
                     <i class="fa fa-times"></i>
                 </button>
             </h3>
@@ -175,7 +182,7 @@
                         取消
                     </button>
                     <button type="submit"
-                            class="px-4 py-2 bg-secondary text-white rounded-md hover:bg-secondary/90 transition-colors">
+                            class="px-4 py-2 bg-secondary text-white/80 rounded-md hover:bg-secondary/90 transition-colors">
                         保存
                     </button>
                 </div>
@@ -186,11 +193,11 @@
 
 <!-- 编辑教师模态框（新增班级输入框） -->
 <div id="editTeacherModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-    <div class="bg-white rounded-lg shadow-xl w-full max-w-md transform transition-all">
+    <div class="bg-white/80 rounded-lg shadow-xl w-full max-w-md transform transition-all">
         <div class="bg-warning p-4 rounded-t-lg">
-            <h3 class="text-white text-lg font-bold flex items-center">
+            <h3 class="text-white/80 text-lg font-bold flex items-center">
                 <i class="fa fa-pencil mr-2"></i> 编辑教师
-                <button id="closeEditTeacherModal" class="ml-auto text-white hover:text-gray-200">
+                <button id="closeEditTeacherModal" class="ml-auto text-white/80 hover:text-gray-200">
                     <i class="fa fa-times"></i>
                 </button>
             </h3>
@@ -242,7 +249,7 @@
                         取消
                     </button>
                     <button type="submit"
-                            class="px-4 py-2 bg-secondary text-white rounded-md hover:bg-secondary/90 transition-colors">
+                            class="px-4 py-2 bg-secondary text-white/80 rounded-md hover:bg-secondary/90 transition-colors">
                         保存
                     </button>
                 </div>
@@ -253,9 +260,9 @@
 
 <!-- 确认删除模态框 -->
 <div id="confirmDeleteModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-    <div class="bg-white rounded-lg shadow-xl w-full max-w-md transform transition-all">
+    <div class="bg-white/80 rounded-lg shadow-xl w-full max-w-md transform transition-all">
         <div class="bg-danger p-4 rounded-t-lg">
-            <h3 class="text-white text-lg font-bold flex items-center">
+            <h3 class="text-white/80 text-lg font-bold flex items-center">
                 <i class="fa fa-trash mr-2"></i> 确认删除
             </h3>
         </div>
@@ -266,7 +273,7 @@
                         class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors">取消
                 </button>
                 <button type="button" id="confirmDelete"
-                        class="px-4 py-2 bg-danger text-white rounded-md hover:bg-danger/90 transition-colors">确认删除
+                        class="px-4 py-2 bg-danger text-white/80 rounded-md hover:bg-danger/90 transition-colors">确认删除
                 </button>
             </div>
         </div>

@@ -4,24 +4,44 @@ let currentId = null;
 
 // DOM加载完成后初始化
 document.addEventListener('DOMContentLoaded', () => {
+
     // 动态加载导航栏、页脚和模态框
     loadSharedComponents();
     // 初始化共用事件
     initSharedEvents();
 });
+// 在index.js中添加以下代码
+document.addEventListener('DOMContentLoaded', () => {
+    // 其他初始化代码...
+
+    // 启动环形滚动
+    startTicker();
+});
+
+function startTicker() {
+    const ticker = document.getElementById('ticker-content');
+    if (ticker) {
+        // 确保有足够的内容用于无缝滚动
+        const originalContent = ticker.innerHTML;
+        ticker.innerHTML = originalContent + originalContent; // 复制一份用于无缝衔接
+
+        // 添加动画类
+        ticker.classList.add('animate-ticker');
+    }
+}
 
 // 加载共用组件（导航栏、页脚、删除模态框）
 function loadSharedComponents() {
     // 1. 加载导航栏
     const navbarHtml = `
-        <nav class="bg-white shadow-md">
+        <nav class="bg-white/50 shadow-md">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between h-16">
                     <div class="flex items-center">
-                        <a href="#" class="flex-shrink-0 flex items-center">
+                        <button id="homeBtn" class="flex-shrink-0 flex items-center focus:outline-none hover:text-primary transition-colors">
                             <i class="fa fa-graduation-cap text-primary text-2xl mr-2"></i>
                             <span class="font-bold text-xl">学生教师管理系统</span>
-                        </a>
+                        </button>
                     </div>
                     <div class="flex items-center space-x-4">
                         <button id="classesTab" class="px-4 py-2 text-gray-500 font-medium hover:text-info">
@@ -58,7 +78,7 @@ function loadSharedComponents() {
     // 3. 加载确认删除模态框（核心：解决null错误的关键）
     const deleteModalHtml = `
         <div id="confirmDeleteModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-            <div class="bg-white rounded-lg shadow-xl w-full max-w-md transform transition-all">
+            <div class="bg-white/70 rounded-lg shadow-xl w-full max-w-md transform transition-all">
                 <div class="bg-danger p-4 rounded-t-lg">
                     <h3 class="text-white text-lg font-bold flex items-center">
                         <i class="fa fa-trash mr-2"></i> 确认删除
@@ -89,13 +109,28 @@ function loadSharedComponents() {
         </div>
     `;
     document.body.insertAdjacentHTML('beforeend', notificationHtml);
+
+    // 导航栏渲染后立即绑定首页按钮事件
+    document.getElementById('homeBtn')?.addEventListener('click', () => {
+        console.log('跳转到首页');
+        window.location.href = 'index.html';
+    });
 }
+
 
 // 初始化共用事件
 function initSharedEvents() {
-    initTabs();         // 导航栏选项卡切换
-    initDeleteModal();  // 删除模态框事件
-    initLogout();       // 退出登录
+    initHomeButton(); // 添加首页按钮事件
+    initTabs();       // 导航栏选项卡切换
+    initDeleteModal();// 删除模态框事件
+    initLogout();     // 退出登录
+}
+// 初始化首页按钮
+function initHomeButton() {
+    document.getElementById('homeBtn')?.addEventListener('click', () => {
+        console.log('跳转到首页');
+        window.location.href = 'index.html';
+    });
 }
 
 // 导航栏选项卡切换
@@ -118,11 +153,27 @@ function initTabs() {
         window.location.href = 'teacher.html';
     });
 
-    // 根据当前URL激活选项卡
+    // 根据当前URL激活选项卡（核心修改：排除index.html页面）
     const currentPath = window.location.pathname.toLowerCase();
-    if (currentPath.includes('class')) setActiveTab('classesTab', 'info');
-    else if (currentPath.includes('student')) setActiveTab('studentsTab', 'primary');
-    else if (currentPath.includes('teacher')) setActiveTab('teachersTab', 'secondary');
+    // 如果是index.html页面，不选中任何选项卡
+    if (currentPath.includes('index')) {
+        ['classesTab', 'studentsTab', 'teachersTab'].forEach(id => {
+            const tab = document.getElementById(id);
+            if (tab) {
+                tab.classList.remove('text-info', 'text-primary', 'text-secondary', 'border-b-2', 'border-info', 'border-primary', 'border-secondary');
+                tab.classList.add('text-gray-500');
+            }
+        });
+        return; // 直接返回，不执行任何选中逻辑
+    }
+    // 其他页面正常判断选中状态
+    else if (currentPath.includes('class')) {
+        setActiveTab('classesTab', 'info');
+    } else if (currentPath.includes('student')) {
+        setActiveTab('studentsTab', 'primary');
+    } else if (currentPath.includes('teacher')) {
+        setActiveTab('teachersTab', 'secondary');
+    }
 }
 
 // 设置选项卡激活状态
@@ -150,7 +201,6 @@ function initDeleteModal() {
     });
 
     // 确认删除（调用对应模块的删除函数）
-// index.js
     document.getElementById('confirmDelete')?.addEventListener('click', () => {
         console.log('[点击确认删除] 类型:', currentEntityType, 'ID:', currentId);
 
