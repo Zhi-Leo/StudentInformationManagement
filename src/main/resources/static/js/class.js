@@ -106,7 +106,7 @@ function loadClasses() {
         });
 }
 
-// 渲染班级表格
+// 渲染班级表格（处理空值显示）
 function renderClasses(classes) {
     const classesBody = document.getElementById('classesBody');
     classesBody.innerHTML = '';
@@ -129,8 +129,8 @@ function renderClasses(classes) {
         row.innerHTML = `
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${classInfo.id}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${classInfo.name}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${classInfo.headTeacher}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${classInfo.studentCount}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${classInfo.headTeacher || '未设置'}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${classInfo.studentCount ?? '未统计'}</td>
             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <button class="text-indigo-600 hover:text-indigo-900 mr-3">
                     <i class="fa fa-pencil"></i> 编辑
@@ -144,16 +144,17 @@ function renderClasses(classes) {
     });
 }
 
-// 添加班级
+// 添加班级（允许班主任和人数为空）
 function addClass() {
     const id = document.getElementById('classId').value.trim();
     const name = document.getElementById('className').value.trim();
     const headTeacher = document.getElementById('headTeacher').value.trim();
-    const studentCount = parseInt(document.getElementById('classNumber').value);
+    const classNumberInput = document.getElementById('classNumber').value.trim();
+    const studentCount = classNumberInput ? parseInt(classNumberInput) : null;
 
-    // 前端校验
-    if (!id || !name || !headTeacher || isNaN(studentCount)) {
-        window.showNotification('error', '错误', '班级ID、名称、班主任和班级人数不能为空');
+    // 前端校验：仅校验必填项
+    if (!id || !name) {
+        window.showNotification('error', '错误', '班级ID和名称不能为空');
         return;
     }
 
@@ -177,24 +178,30 @@ function addClass() {
         });
 }
 
-// 编辑班级
+// 编辑班级（允许班主任和人数为空）
 function editClass(id, name, headTeacher, number) {
+    // 显示班级ID（只读）
+    document.getElementById('editClassIdDisplay').value = id;
+    // 隐藏字段用于提交（保持ID不变）
     document.getElementById('editClassId').value = id;
+    // 其他字段正常回显
     document.getElementById('editClassName').value = name;
     document.getElementById('editHeadTeacher').value = headTeacher;
-    document.getElementById('editClassNumber').value = number;
+    document.getElementById('editClassNumber').value = number || '';
     document.getElementById('editClassModal').classList.remove('hidden');
 }
 
-// 更新班级
+// 更新班级（允许班主任和人数为空）
 function updateClass() {
     const id = document.getElementById('editClassId').value;
     const name = document.getElementById('editClassName').value.trim();
     const headTeacher = document.getElementById('editHeadTeacher').value.trim();
-    const studentCount = parseInt(document.getElementById('editClassNumber').value);
+    const classNumberInput = document.getElementById('editClassNumber').value.trim();
+    const studentCount = classNumberInput ? parseInt(classNumberInput) : null;
 
-    if (!name || !headTeacher || isNaN(studentCount)) {
-        window.showNotification('error', '错误', '班级名称、班主任和班级人数不能为空');
+    // 仅校验班级名称必填
+    if (!name) {
+        window.showNotification('error', '错误', '班级名称不能为空');
         return;
     }
 
@@ -209,7 +216,6 @@ function updateClass() {
         })
         .then(data => {
             window.showNotification('success', '成功', '班级更新成功');
-            // 更新本地数据
             const index = originalClasses.findIndex(c => c.id === id);
             if (index !== -1) originalClasses[index] = data;
             renderClasses(originalClasses);
@@ -220,7 +226,7 @@ function updateClass() {
         });
 }
 
-// 核心：删除班级（修正函数命名和API路径）
+// 核心：删除班级
 window.deleteClass = function (id) {
     console.log('[删除班级] ID:', id);
 
@@ -229,7 +235,6 @@ window.deleteClass = function (id) {
         return;
     }
 
-    // 确认班级是否存在
     const classExists = originalClasses.some(cls => cls.id === id);
     if (!classExists) {
         window.showNotification('error', '错误', '该班级不存在');
@@ -241,12 +246,10 @@ window.deleteClass = function (id) {
     })
         .then(response => {
             if (!response.ok) {
-                // 尝试获取更详细的错误信息
                 return response.text().then(text => {
                     throw new Error(text || '删除失败，可能存在关联学生');
                 });
             }
-            // 更新本地数据
             originalClasses = originalClasses.filter(cls => cls.id !== id);
             renderClasses(originalClasses);
             window.showNotification('success', '成功', '班级删除成功');
@@ -256,13 +259,13 @@ window.deleteClass = function (id) {
         });
 };
 
-// 搜索过滤班级
+// 搜索过滤班级（适配空值）
 function filterClasses() {
     const searchTerm = document.getElementById('classSearch').value.toLowerCase();
     const filtered = originalClasses.filter(c =>
         c.id.toLowerCase().includes(searchTerm) ||
         c.name.toLowerCase().includes(searchTerm) ||
-        c.headTeacher.toLowerCase().includes(searchTerm)
+        (c.headTeacher && c.headTeacher.toLowerCase().includes(searchTerm))
     );
     renderClasses(filtered);
 }

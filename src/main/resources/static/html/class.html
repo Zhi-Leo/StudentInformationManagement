@@ -118,28 +118,26 @@
         <div class="p-6">
             <form id="addClassForm">
                 <div class="mb-4">
-                    <label for="classId" class="block text-sm font-medium text-gray-700 mb-1">班级 ID</label>
+                    <label for="classId" class="block text-sm font-medium text-gray-700 mb-1">班级 ID <span class="text-red-500">*</span></label>
                     <input type="text" id="classId"
                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-info focus:ring focus:ring-info/30 transition duration-200"
                            required>
                 </div>
                 <div class="mb-4">
-                    <label for="className" class="block text-sm font-medium text-gray-700 mb-1">班级名称</label>
+                    <label for="className" class="block text-sm font-medium text-gray-700 mb-1">班级名称 <span class="text-red-500">*</span></label>
                     <input type="text" id="className"
                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-info focus:ring focus:ring-info/30 transition duration-200"
                            required>
                 </div>
                 <div class="mb-4">
-                    <label for="headTeacher" class="block text-sm font-medium text-gray-700 mb-1">班主任</label>
+                    <label for="headTeacher" class="block text-sm font-medium text-gray-700 mb-1">班主任（选填）</label>
                     <input type="text" id="headTeacher"
-                           class="block w-full rounded-md border-gray-300 shadow-sm focus:border-info focus:ring focus:ring-info/30 transition duration-200"
-                           required>
+                           class="block w-full rounded-md border-gray-300 shadow-sm focus:border-info focus:ring focus:ring-info/30 transition duration-200">
                 </div>
                 <div class="mb-4">
-                    <label for="classNumber" class="block text-sm font-medium text-gray-700 mb-1">班级人数</label>
+                    <label for="classNumber" class="block text-sm font-medium text-gray-700 mb-1">班级人数（选填）</label>
                     <input type="number" id="classNumber"
-                           class="block w-full rounded-md border-gray-300 shadow-sm focus:border-info focus:ring focus:ring-info/30 transition duration-200"
-                           required>
+                           class="block w-full rounded-md border-gray-300 shadow-sm focus:border-info focus:ring focus:ring-info/30 transition duration-200">
                 </div>
                 <div class="flex justify-end space-x-4">
                     <button type="button" id="cancelAddClass"
@@ -155,7 +153,7 @@
     </div>
 </div>
 
-<!-- 编辑班级模态框 -->
+<!-- 编辑班级模态框（新增班级ID显示） -->
 <div id="editClassModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
     <div class="bg-white rounded-lg shadow-xl w-full max-w-md transform transition-all">
         <div class="bg-info p-4 rounded-t-lg">
@@ -168,24 +166,30 @@
         </div>
         <div class="p-6">
             <form id="editClassForm">
-                <input type="hidden" id="editClassId">
+                <!-- 显示班级ID，设置为只读 -->
                 <div class="mb-4">
-                    <label for="editClassName" class="block text-sm font-medium text-gray-700 mb-1">班级名称</label>
+                    <label for="editClassIdDisplay" class="block text-sm font-medium text-gray-700 mb-1">班级 ID</label>
+                    <input type="text" id="editClassIdDisplay"
+                           class="block w-full rounded-md border-gray-300 shadow-sm bg-gray-100"
+                           readonly>
+                    <!-- 隐藏的ID字段，用于提交 -->
+                    <input type="hidden" id="editClassId">
+                </div>
+                <div class="mb-4">
+                    <label for="editClassName" class="block text-sm font-medium text-gray-700 mb-1">班级名称 <span class="text-red-500">*</span></label>
                     <input type="text" id="editClassName"
                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-info focus:ring focus:ring-info/30 transition duration-200"
                            required>
                 </div>
                 <div class="mb-4">
-                    <label for="editHeadTeacher" class="block text-sm font-medium text-gray-700 mb-1">班主任</label>
+                    <label for="editHeadTeacher" class="block text-sm font-medium text-gray-700 mb-1">班主任（选填）</label>
                     <input type="text" id="editHeadTeacher"
-                           class="block w-full rounded-md border-gray-300 shadow-sm focus:border-info focus:ring focus:ring-info/30 transition duration-200"
-                           required>
+                           class="block w-full rounded-md border-gray-300 shadow-sm focus:border-info focus:ring focus:ring-info/30 transition duration-200">
                 </div>
                 <div class="mb-4">
-                    <label for="editClassNumber" class="block text-sm font-medium text-gray-700 mb-1">班级人数</label>
+                    <label for="editClassNumber" class="block text-sm font-medium text-gray-700 mb-1">班级人数（选填）</label>
                     <input type="number" id="editClassNumber"
-                           class="block w-full rounded-md border-gray-300 shadow-sm focus:border-info focus:ring focus:ring-info/30 transition duration-200"
-                           required>
+                           class="block w-full rounded-md border-gray-300 shadow-sm focus:border-info focus:ring focus:ring-info/30 transition duration-200">
                 </div>
                 <div class="flex justify-end space-x-4">
                     <button type="button" id="cancelEditClass"
@@ -200,11 +204,6 @@
         </div>
     </div>
 </div>
-
-<!-- 页脚（复用） -->
-<footer class="bg-gray-800 text-white py-6">
-    <!-- 同html.html的页脚 -->
-</footer>
 
 <!-- 引入JS -->
 <script src="../js/index.js"></script>
