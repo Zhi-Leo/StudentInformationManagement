@@ -144,6 +144,27 @@ function renderClasses(classes) {
     });
 }
 
+// 过滤班级列表
+function filterClasses() {
+    const searchTerm = document.getElementById('classSearch').value.toLowerCase().trim();
+
+    if (!searchTerm) {
+        // 如果搜索框为空，显示原始列表
+        renderClasses(originalClasses);
+        return;
+    }
+
+    // 过滤班级列表
+    const filteredClasses = originalClasses.filter(cls => {
+        // 检查班级的任何字段是否包含搜索词
+        return Object.values(cls).some(value =>
+            value.toString().toLowerCase().includes(searchTerm)
+        );
+    });
+
+    renderClasses(filteredClasses);
+}
+
 // 添加班级（允许班主任和人数为空）
 function addClass() {
     const id = document.getElementById('classId').value.trim();
@@ -172,6 +193,9 @@ function addClass() {
             originalClasses.push(data);
             renderClasses(originalClasses);
             document.getElementById('addClassModal').classList.add('hidden');
+
+            // 调用更新所有班级学生数量的接口
+            updateAllClassStudentCounts();
         })
         .catch(error => {
             window.showNotification('error', '失败', error.message);
@@ -220,6 +244,9 @@ function updateClass() {
             if (index !== -1) originalClasses[index] = data;
             renderClasses(originalClasses);
             document.getElementById('editClassModal').classList.add('hidden');
+
+            // 调用更新所有班级学生数量的接口
+            updateAllClassStudentCounts();
         })
         .catch(error => {
             window.showNotification('error', '失败', error.message);
@@ -253,19 +280,28 @@ window.deleteClass = function (id) {
             originalClasses = originalClasses.filter(cls => cls.id !== id);
             renderClasses(originalClasses);
             window.showNotification('success', '成功', '班级删除成功');
+
+            // 调用更新所有班级学生数量的接口
+            updateAllClassStudentCounts();
         })
         .catch(error => {
             window.showNotification('error', '失败', error.message);
         });
-};
+}
 
-// 搜索过滤班级（适配空值）
-function filterClasses() {
-    const searchTerm = document.getElementById('classSearch').value.toLowerCase();
-    const filtered = originalClasses.filter(c =>
-        c.id.toLowerCase().includes(searchTerm) ||
-        c.name.toLowerCase().includes(searchTerm) ||
-        (c.headTeacher && c.headTeacher.toLowerCase().includes(searchTerm))
-    );
-    renderClasses(filtered);
+// 更新所有班级的学生数量
+function updateAllClassStudentCounts() {
+    fetch('/api/classes/updateAllStudentCounts', {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json'}
+    })
+        .then(response => {
+            if (!response.ok) throw new Error('更新所有班级人数失败');
+            // 重新加载班级数据
+            loadClasses();
+        })
+        .catch(error => {
+            console.error('更新所有班级人数失败:', error);
+            window.showNotification('error', '失败', '更新所有班级人数失败');
+        });
 }

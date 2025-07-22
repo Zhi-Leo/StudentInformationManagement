@@ -1,6 +1,7 @@
 package com.example.student_management.controller;
 
 import com.example.student_management.entity.Student;
+import com.example.student_management.service.ClassInfoService;
 import com.example.student_management.service.StudentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -15,6 +16,8 @@ import java.util.List;
 public class StudentController {
     @Autowired
     private StudentService studentService;
+    @Autowired
+    private ClassInfoService classInfoService;
 
     // 获取所有学生
     @GetMapping
@@ -37,6 +40,8 @@ public class StudentController {
     @PostMapping
     public ResponseEntity<Student> addStudent(@RequestBody Student student) {
         Student savedStudent = studentService.addStudent(student);
+        // 调用更新班级学生数量的方法
+        classInfoService.updateClassStudentCount(savedStudent.getClas());
         return new ResponseEntity<>(savedStudent, HttpStatus.CREATED);
     }
 
@@ -46,6 +51,8 @@ public class StudentController {
         student.setId(id); // 确保 ID 一致
         Student updatedStudent = studentService.updateStudent(student);
         if (updatedStudent != null) {
+            // 调用更新班级学生数量的方法
+            classInfoService.updateClassStudentCount(updatedStudent.getClas());
             return new ResponseEntity<>(updatedStudent, HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -55,6 +62,11 @@ public class StudentController {
     // 删除学生
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteStudent(@PathVariable String id) {
+        Student student = studentService.getStudentById(id);
+        if (student != null) {
+            // 调用更新班级学生数量的方法
+            classInfoService.updateClassStudentCount(student.getClas());
+        }
         studentService.deleteStudent(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }

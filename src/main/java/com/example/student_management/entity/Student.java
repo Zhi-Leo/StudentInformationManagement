@@ -68,11 +68,11 @@ public class Student {
         this.grade = grade;
     }
 
-    public String getclas() {
+    public String getClas() { // 添加 getClas 方法
         return clas;
     }
 
-    public void setclas(String clas) {
+    public void setClas(String clas) {
         this.clas = clas;
     }
 

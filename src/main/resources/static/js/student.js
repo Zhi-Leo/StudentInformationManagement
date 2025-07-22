@@ -166,6 +166,27 @@ function renderStudents(students) {
     });
 }
 
+// 过滤学生列表
+function filterStudents() {
+    const searchTerm = document.getElementById('studentSearch').value.toLowerCase().trim();
+
+    if (!searchTerm) {
+        // 如果搜索框为空，显示原始列表
+        renderStudents(originalStudents);
+        return;
+    }
+
+    // 过滤学生列表
+    const filteredStudents = originalStudents.filter(student => {
+        // 检查学生的任何字段是否包含搜索词
+        return Object.values(student).some(value =>
+            value.toString().toLowerCase().includes(searchTerm)
+        );
+    });
+
+    renderStudents(filteredStudents);
+}
+
 // 添加学生
 function addStudent() {
     const id = document.getElementById('studentId').value.trim();
@@ -199,6 +220,9 @@ function addStudent() {
             renderStudents(originalStudents);
             document.getElementById('addStudentModal').classList.add('hidden');
             window.showNotification('success', '成功', '学生添加成功');
+
+            // 调用更新所有班级学生数量的接口
+            updateAllClassStudentCounts();
         })
         .catch(error => {
             window.showNotification('error', '失败', error.message);
@@ -206,6 +230,23 @@ function addStudent() {
         .finally(() => {
             submitBtn.disabled = false;
             submitBtn.textContent = '保存';
+        });
+}
+
+// 更新所有班级的学生数量
+function updateAllClassStudentCounts() {
+    fetch('/api/classes/updateAllStudentCounts', {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json'}
+    })
+        .then(response => {
+            if (!response.ok) throw new Error('更新所有班级人数失败');
+            // 重新加载班级数据
+            loadClasses();
+        })
+        .catch(error => {
+            console.error('更新所有班级人数失败:', error);
+            window.showNotification('error', '失败', '更新所有班级人数失败');
         });
 }
 
@@ -224,28 +265,33 @@ function editStudent(id) {
     document.getElementById('editStudentAge').value = student.age;
     document.getElementById('editStudentSex').value = student.sex;
     document.getElementById('editStudentGrade').value = student.grade;
+
     document.getElementById('editStudentModal').classList.remove('hidden');
 }
 
 // 更新学生
 function updateStudent() {
     const id = document.getElementById('editStudentId').value;
-    const clas = document.getElementById('editStudentClas').value.trim(); // 班级字段
+    const clas = document.getElementById('editStudentClas').value.trim();
     const name = document.getElementById('editStudentName').value.trim();
     const age = parseInt(document.getElementById('editStudentAge').value);
     const sex = document.getElementById('editStudentSex').value;
     const grade = parseFloat(document.getElementById('editStudentGrade').value);
 
     // 校验
-    if (!clas || !name || isNaN(age) || age < 5 || age > 100 || isNaN(grade) || grade < 0 || grade > 100) {
+    if (!id || !clas || !name || isNaN(age) || age < 5 || age > 100 || isNaN(grade) || grade < 0 || grade > 100) {
         window.showNotification('error', '错误', '请输入有效的学生信息（班级不能为空）');
         return;
     }
 
+    const submitBtn = document.querySelector('#editStudentForm button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.textContent = '提交中...';
+
     fetch(`/api/students/${id}`, {
         method: 'PUT',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({id, clas, name, age, sex, grade}) // 包含班级字段
+        body: JSON.stringify({id, clas, name, age, sex, grade})
     })
         .then(response => {
             if (!response.ok) throw new Error('更新失败');
@@ -253,68 +299,21 @@ function updateStudent() {
         })
         .then(data => {
             const index = originalStudents.findIndex(s => s.id === id);
-            if (index !== -1) originalStudents[index] = data;
+            if (index !== -1) {
+                originalStudents[index] = data;
+            }
             renderStudents(originalStudents);
             document.getElementById('editStudentModal').classList.add('hidden');
             window.showNotification('success', '成功', '学生信息更新成功');
+
+            // 调用更新所有班级学生数量的接口
+            updateAllClassStudentCounts();
         })
         .catch(error => {
             window.showNotification('error', '失败', error.message);
-        });
-}
-
-// 删除学生
-window.deleteStudent = function (id) {
-    if (!id) {
-        window.showNotification('error', '错误', '未找到学生ID');
-        return;
-    }
-
-    fetch(`/api/students/${id}`, {
-        method: 'DELETE'
-    })
-        .then(response => {
-            if (!response.ok) throw new Error('删除失败，可能存在关联数据');
-            originalStudents = originalStudents.filter(s => s.id !== id);
-            renderStudents(originalStudents);
-            window.showNotification('success', '删除成功', '学生信息已删除');
         })
-        .catch(error => {
-            window.showNotification('error', '删除失败', error.message);
+        .finally(() => {
+            submitBtn.disabled = false;
+            submitBtn.textContent = '保存';
         });
-};
-
-// 搜索过滤学生
-function filterStudents() {
-    const searchTerm = document.getElementById('studentSearch').value.toLowerCase().trim();
-    if (!searchTerm) {
-        renderStudents(originalStudents);
-        return;
-    }
-
-    const filteredStudents = originalStudents.filter(student => {
-        return student.id.toLowerCase().includes(searchTerm) ||
-            (student.clas && student.clas.toLowerCase().includes(searchTerm)) || // 搜索班级
-            student.name.toLowerCase().includes(searchTerm) ||
-            student.sex.toLowerCase().includes(searchTerm) ||
-            (student.age && student.age.toString().includes(searchTerm)) ||
-            (student.grade && student.grade.toString().includes(searchTerm));
-    });
-
-    renderStudents(filteredStudents);
 }
-
-// 通知提示（复用）
-window.showNotification = function (type, title, message) {
-    // 假设index.js中已实现通知逻辑，若未实现可添加：
-    const notification = document.createElement('div');
-    notification.className = `fixed top-4 right-4 p-4 rounded-md shadow-lg ${
-        type === 'success' ? 'bg-green-500' : 'bg-red-500'
-    } text-white z-50`;
-    notification.innerHTML = `
-        <strong>${title}</strong>
-        <p>${message}</p>
-    `;
-    document.body.appendChild(notification);
-    setTimeout(() => notification.remove(), 3000);
-};

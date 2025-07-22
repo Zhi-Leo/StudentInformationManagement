@@ -10,24 +10,25 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/classes")
 public class ClassInfoController {
+
     private final ClassInfoService classInfoService;
 
-    // 必须通过构造函数注入Service（确保Spring能自动装配）
     public ClassInfoController(ClassInfoService classInfoService) {
         this.classInfoService = classInfoService;
     }
 
-
     // 获取所有班级
     @GetMapping
-    public List<ClassInfo> getAllClasses() {
-        return classInfoService.getAllClasses();
+    public ResponseEntity<List<ClassInfo>> getAllClasses() {
+        List<ClassInfo> classes = classInfoService.getAllClasses();
+        return ResponseEntity.ok(classes);
     }
 
     // 添加班级
     @PostMapping
-    public ClassInfo addClass(@RequestBody ClassInfo classInfo) {
-        return classInfoService.addClass(classInfo);
+    public ResponseEntity<ClassInfo> addClass(@RequestBody ClassInfo classInfo) {
+        ClassInfo savedClass = classInfoService.addClass(classInfo);
+        return ResponseEntity.ok(savedClass);
     }
 
     // 更新班级
@@ -45,6 +46,23 @@ public class ClassInfoController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteClass(@PathVariable String id) {
         classInfoService.deleteClass(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    // 更新单个班级的学生数量
+    @PutMapping("/{id}/updateStudentCount")
+    public ResponseEntity<ClassInfo> updateClassStudentCount(@PathVariable String id) {
+        ClassInfo updatedClass = classInfoService.updateClassStudentCount(id);
+        if (updatedClass != null) {
+            return ResponseEntity.ok(updatedClass);
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    // 更新所有班级的学生数量
+    @PutMapping("/updateAllStudentCounts")
+    public ResponseEntity<Void> updateAllClassStudentCounts() {
+        classInfoService.updateAllClassStudentCounts();
         return ResponseEntity.noContent().build();
     }
 }
