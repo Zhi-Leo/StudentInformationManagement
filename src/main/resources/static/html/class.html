@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>班级管理 - 学生教师管理系统</title>
+    <!-- 外部资源 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',    // 蓝色（学生管理）
+                        secondary: '#10B981',  // 绿色（教师管理）
+                        danger: '#EF4444',     // 红色（删除/危险）
+                        warning: '#F59E0B',    // 黄色（编辑）
+                        info: '#6366F1'        // 靛蓝色（班级管理）
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+        }
+        body {
+            /* 设置背景图 */
+            background-image: url('../唯美少女 马尾辫4K动漫壁纸3840_2160_彼岸图网.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+    </style>
+
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+<!-- 主内容区 -->
+<main class="flex-grow container mx-auto px-4 py-8">
+    <div id="classesSection">
+        <div class="bg-white/80 rounded-lg shadow-lg overflow-hidden mb-8">
+            <div class="bg-info p-4">
+                <h2 class="text-white text-xl font-bold flex items-center">
+                    <i class="fa fa-building mr-2"></i> 班级列表
+                    <button id="addClassBtn"
+                            class="ml-auto bg-white/80 text-info px-4 py-1 rounded-md text-sm font-medium hover:bg-gray-100 transition-colors">
+                        <i class="fa fa-plus mr-1"></i> 添加班级
+                    </button>
+                </h2>
+            </div>
+            <div class="p-4">
+                <div class="flex justify-between mb-4">
+                    <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+                                <i class="fa fa-search"></i>
+                            </span>
+                        <input type="text" id="classSearch" placeholder="搜索班级..."
+                               class="pl-10 block w-full rounded-md border-gray-300 shadow-sm focus:border-info focus:ring focus:ring-info/30 transition duration-200">
+                    </div>
+                    <button id="refreshClasses"
+                            class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-1 rounded-md text-sm font-medium transition-colors">
+                        <i class="fa fa-refresh mr-1"></i> 刷新
+                    </button>
+                </div>
+                <div id="classesTable" class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                班级 ID
+                            </th>
+                            <th scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                班级名称
+                            </th>
+                            <th scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                班主任
+                            </th>
+                            <th scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                班级人数
+                            </th>
+                            <th scope="col"
+                                class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                操作
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody id="classesBody" class="bg-white/80 divide-y divide-gray-200">
+                        <tr class="text-center">
+                            <td colspan="5" class="px-6 py-12 text-gray-500">
+                                <i class="fa fa-spinner fa-spin text-2xl mb-2"></i>
+                                <p>加载中...</p>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- 班级管理模态框 -->
+<!-- 添加班级模态框 -->
+<div id="addClassModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white/80 rounded-lg shadow-xl w-full max-w-md transform transition-all">
+        <div class="bg-info p-4 rounded-t-lg">
+            <h3 class="text-white text-lg font-bold flex items-center">
+                <i class="fa fa-plus mr-2"></i> 添加班级
+                <button id="closeClassModal" class="ml-auto text-white hover:text-gray-200">
+                    <i class="fa fa-times"></i>
+                </button>
+            </h3>
+        </div>
+        <div class="p-6">
+            <form id="addClassForm">
+                <div class="mb-4">
+                    <label for="classId" class="block text-sm font-medium text-gray-700 mb-1">班级 ID <span class="text-red-500">*</span></label>
+                    <input type="text" id="classId"
+                           class="block w-full rounded-md border-gray-300 shadow-sm focus:border-info focus:ring focus:ring-info/30 transition duration-200"
+                           required>
+                </div>
+                <div class="mb-4">
+                    <label for="className" class="block text-sm font-medium text-gray-700 mb-1">班级名称 <span class="text-red-500">*</span></label>
+                    <input type="text" id="className"
+                           class="block w-full rounded-md border-gray-300 shadow-sm focus:border-info focus:ring focus:ring-info/30 transition duration-200"
+                           required>
+                </div>
+                <div class="mb-4">
+                    <label for="headTeacher" class="block text-sm font-medium text-gray-700 mb-1">班主任（选填）</label>
+                    <input type="text" id="headTeacher"
+                           class="block w-full rounded-md border-gray-300 shadow-sm focus:border-info focus:ring focus:ring-info/30 transition duration-200">
+                </div>
+                <div class="mb-4">
+                    <label for="classNumber" class="block text-sm font-medium text-gray-700 mb-1">班级人数（选填）</label>
+                    <input type="number" id="classNumber"
+                           class="block w-full rounded-md border-gray-300 shadow-sm focus:border-info focus:ring focus:ring-info/30 transition duration-200">
+                </div>
+                <div class="flex justify-end space-x-4">
+                    <button type="button" id="cancelAddClass"
+                            class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors">
+                        取消
+                    </button>
+                    <button type="submit"
+                            class="px-4 py-2 bg-info text-white rounded-md hover:bg-info/90 transition-colors">保存
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 编辑班级模态框（新增班级ID显示） -->
+<div id="editClassModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white/80 rounded-lg shadow-xl w-full max-w-md transform transition-all">
+        <div class="bg-info p-4 rounded-t-lg">
+            <h3 class="text-white text-lg font-bold flex items-center">
+                <i class="fa fa-pencil mr-2"></i> 编辑班级
+                <button id="closeEditClassModal" class="ml-auto text-white hover:text-gray-200">
+                    <i class="fa fa-times"></i>
+                </button>
+            </h3>
+        </div>
+        <div class="p-6">
+            <form id="editClassForm">
+                <!-- 显示班级ID，设置为只读 -->
+                <div class="mb-4">
+                    <label for="editClassIdDisplay" class="block text-sm font-medium text-gray-700 mb-1">班级 ID</label>
+                    <input type="text" id="editClassIdDisplay"
+                           class="block w-full rounded-md border-gray-300 shadow-sm bg-gray-100"
+                           readonly>
+                    <!-- 隐藏的ID字段，用于提交 -->
+                    <input type="hidden" id="editClassId">
+                </div>
+                <div class="mb-4">
+                    <label for="editClassName" class="block text-sm font-medium text-gray-700 mb-1">班级名称 <span class="text-red-500">*</span></label>
+                    <input type="text" id="editClassName"
+                           class="block w-full rounded-md border-gray-300 shadow-sm focus:border-info focus:ring focus:ring-info/30 transition duration-200"
+                           required>
+                </div>
+                <div class="mb-4">
+                    <label for="editHeadTeacher" class="block text-sm font-medium text-gray-700 mb-1">班主任（选填）</label>
+                    <input type="text" id="editHeadTeacher"
+                           class="block w-full rounded-md border-gray-300 shadow-sm focus:border-info focus:ring focus:ring-info/30 transition duration-200">
+                </div>
+                <div class="mb-4">
+                    <label for="editClassNumber" class="block text-sm font-medium text-gray-700 mb-1">班级人数（选填）</label>
+                    <input type="number" id="editClassNumber"
+                           class="block w-full rounded-md border-gray-300 shadow-sm focus:border-info focus:ring focus:ring-info/30 transition duration-200">
+                </div>
+                <div class="flex justify-end space-x-4">
+                    <button type="button" id="cancelEditClass"
+                            class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors">
+                        取消
+                    </button>
+                    <button type="submit"
+                            class="px-4 py-2 bg-info text-white rounded-md hover:bg-info/90 transition-colors">保存
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 引入JS -->
+<script src="../js/index.js"></script>
+<script src="../js/class.js"></script>
+</body>
+</html>

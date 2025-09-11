@@ -1,0 +1,204 @@
+<!--可爱粉色连帽衫动漫女孩4K壁纸3840x2160_彼岸图网.jpg-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学生教师管理系统</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
+    <!-- 自定义配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#10B981',
+                        danger: '#EF4444',
+                        warning: '#F59E0B',
+                        info: '#6366F1',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+
+            .card-shadow {
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            }
+        }
+
+        body {
+            background-image: url('../可爱粉色连帽衫动漫女孩4K壁纸3840x2160_彼岸图网.jpg');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .login-container {
+            background-color: rgba(255, 255, 255, 0.5); /* 设置背景透明度 */
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 0.5s ease-in-out;
+            z-index: 1; /* 设置层叠顺序 */
+            padding: 2rem;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="login-container">
+    <h2 class="text-2xl font-bold mb-4 text-center text-primary">学生教师管理系统登录</h2>
+    <!-- 登录表单 -->
+    <form id="loginForm">
+        <div class="mb-4">
+            <label for="uid" class="block text-sm font-medium text-gray-700 mb-1">账号</label>
+            <input type="text" id="uid"
+                   class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary/30 transition duration-200"
+                   required>
+        </div>
+        <div class="mb-6">
+            <label for="upass" class="block text-sm font-medium text-gray-700 mb-1">密码</label>
+            <input type="password" id="upass"
+                   class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary/30 transition duration-200"
+                   required>
+        </div>
+        <div class="flex justify-center space-x-4">
+            <button type="submit"
+                    class="px-6 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors">登录
+            </button>
+            <button type="button" id="registerBtn"
+                    class="px-6 py-2 bg-secondary text-white rounded-md hover:bg-secondary/90 transition-colors">注册
+            </button>
+        </div>
+    </form>
+    <!-- 注册表单，初始隐藏 -->
+    <form id="registerForm" class="hidden">
+        <div class="mb-4">
+            <label for="newUid" class="block text-sm font-medium text-gray-700 mb-1">新账号</label>
+            <input type="text" id="newUid"
+                   class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary/30 transition duration-200"
+                   required>
+        </div>
+        <div class="mb-4">
+            <label for="newUpass" class="block text-sm font-medium text-gray-700 mb-1">新密码</label>
+            <input type="password" id="newUpass"
+                   class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary/30 transition duration-200"
+                   required>
+        </div>
+        <div class="mb-4">
+            <label for="adminUid" class="block text-sm font-medium text-gray-700 mb-1">管理员账号</label>
+            <input type="text" id="adminUid"
+                   class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary/30 transition duration-200"
+                   required>
+        </div>
+        <div class="mb-6">
+            <label for="adminUpass" class="block text-sm font-medium text-gray-700 mb-1">管理员密码</label>
+            <input type="password" id="adminUpass"
+                   class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary/30 transition duration-200"
+                   required>
+        </div>
+        <div class="flex justify-center space-x-4">
+            <button type="submit"
+                    class="px-6 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors">提交注册
+            </button>
+            <button type="button" id="cancelRegisterBtn"
+                    class="px-6 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors">取消
+            </button>
+        </div>
+    </form>
+</div>
+<script>
+    document.getElementById('registerBtn').addEventListener('click', () => {
+        document.getElementById('loginForm').classList.add('hidden');
+        document.getElementById('registerForm').classList.remove('hidden');
+    });
+
+    document.getElementById('cancelRegisterBtn').addEventListener('click', () => {
+        document.getElementById('registerForm').classList.add('hidden');
+        document.getElementById('loginForm').classList.remove('hidden');
+    });
+
+    document.getElementById('loginForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const uid = document.getElementById('uid').value;
+        const upass = document.getElementById('upass').value;
+
+        fetch('/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: `uid=${uid}&upass=${upass}`
+        })
+            .then(response => response.text())
+            .then(data => {
+                alert(data);
+                if (data === '登录成功') {
+                    // 登录成功后跳转到主页
+                    localStorage.setItem('isLoggedIn', 'true');
+                    window.location.href = 'index.html';
+                }
+            })
+            .catch(error => {
+                console.error('登录请求出错:', error);
+            });
+    });
+
+    document.getElementById('registerForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const newUid = document.getElementById('newUid').value;
+        const newUpass = document.getElementById('newUpass').value;
+        const adminUid = document.getElementById('adminUid').value;
+        const adminUpass = document.getElementById('adminUpass').value;
+
+        fetch('/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: `newUid=${newUid}&newUpass=${newUpass}&adminUid=${adminUid}&adminUpass=${adminUpass}`
+        })
+            .then(response => response.text())
+            .then(data => {
+                alert(data);
+                if (data === '注册成功') {
+                    // 注册成功后显示登录表单
+                    document.getElementById('registerForm').classList.add('hidden');
+                    document.getElementById('loginForm').classList.remove('hidden');
+                }
+            })
+            .catch(error => {
+                console.error('注册请求出错:', error);
+            });
+    });
+</script>
+</body>
+</html>

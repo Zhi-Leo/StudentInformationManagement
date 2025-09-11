@@ -42,7 +42,6 @@
 </head>
 <body class="bg-gray-50 min-h-screen flex flex-col">
 <!-- 导航栏 -->
-
 <nav class="bg-white shadow-md">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
@@ -53,328 +52,25 @@
                 </a>
             </div>
             <div class="flex items-center space-x-4">
-                <button id="classesTab" class="px-4 py-2 text-gray-500 font-medium hover:text-gray-700">
-                    <i class="fa fa-building mr-1"></i> 班级管理
-                </button>
                 <button id="studentsTab" class="px-4 py-2 text-primary font-medium border-b-2 border-primary">
                     <i class="fa fa-users mr-1"></i> 学生管理
                 </button>
                 <button id="teachersTab" class="px-4 py-2 text-gray-500 font-medium hover:text-gray-700">
                     <i class="fa fa-briefcase mr-1"></i> 教师管理
                 </button>
-                <button id="logoutBtn" class="px-4 py-2 text-danger font-medium hover:text-danger/90">
-                    <i class="fa fa-sign-out mr-1"></i> 退出登录
+                <!-- 新增退出按钮 -->
+                <button id="logoutBtn" class="px-4 py-2 bg-red-500 text-white font-medium rounded-md hover:bg-red-600">
+                    <i class="fa fa-sign-out mr-1"></i> 退出
                 </button>
             </div>
         </div>
     </div>
 </nav>
 
-<!-- 班级管理 (默认隐藏) -->
-<div id="classesSection" class="hidden">
-    <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
-        <div class="bg-info p-4">
-            <h2 class="text-white text-xl font-bold flex items-center">
-                <i class="fa fa-building mr-2"></i> 班级列表
-                <button id="addClassBtn" class="ml-auto bg-white text-info px-4 py-1 rounded-md text-sm font-medium hover:bg-gray-100 transition-colors">
-                    <i class="fa fa-plus mr-1"></i> 添加班级
-                </button>
-            </h2>
-        </div>
-        <div class="p-4">
-            <div class="flex justify-between mb-4">
-                <div class="relative">
-                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
-                            <i class="fa fa-search"></i>
-                        </span>
-                    <input type="text" id="classSearch" placeholder="搜索班级..." class="pl-10 block w-full rounded-md border-gray-300 shadow-sm focus:border-info focus:ring focus:ring-info/30 transition duration-200">
-                </div>
-                <button id="refreshClasses" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-1 rounded-md text-sm font-medium transition-colors">
-                    <i class="fa fa-refresh mr-1"></i> 刷新
-                </button>
-            </div>
-            <div id="classesTable" class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                    <tr>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">班级 ID</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">班级名称</th>
-                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
-                    </tr>
-                    </thead>
-                    <tbody id="classesBody" class="bg-white divide-y divide-gray-200">
-                    <!-- 班级数据将通过 JavaScript 动态填充 -->
-                    <tr class="text-center">
-                        <td colspan="3" class="px-6 py-12 text-gray-500">
-                            <i class="fa fa-spinner fa-spin text-2xl mb-2"></i>
-                            <p>加载中...</p>
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- 添加班级模态框（假设这里简单模拟，你可按需完善） -->
-<div id="addClassModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-    <div class="bg-white rounded-lg shadow-xl w-full max-w-md transform transition-all">
-        <div class="bg-info p-4 rounded-t-lg">
-            <h3 class="text-white text-lg font-bold flex items-center">
-                <i class="fa fa-plus mr-2"></i> 添加班级
-                <button id="closeClassModal" class="ml-auto text-white hover:text-gray-200">
-                    <i class="fa fa-times"></i>
-                </button>
-            </h3>
-        </div>
-        <div class="p-6">
-            <form id="addClassForm">
-                <div class="mb-4">
-                    <label for="classId" class="block text-sm font-medium text-gray-700 mb-1">班级 ID</label>
-                    <input type="text" id="classId" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-info focus:ring focus:ring-info/30 transition duration-200" required>
-                </div>
-                <div class="mb-4">
-                    <label for="className" class="block text-sm font-medium text-gray-700 mb-1">班级名称</label>
-                    <input type="text" id="className" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-info focus:ring focus:ring-info/30 transition duration-200" required>
-                </div>
-                <div class="flex justify-end space-x-4">
-                    <button type="button" id="cancelAddClass" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors">取消</button>
-                    <button type="submit" class="px-4 py-2 bg-info text-white rounded-md hover:bg-info/90 transition-colors">保存</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- 编辑班级模态框 -->
-<div id="editClassModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-    <div class="bg-white rounded-lg shadow-xl w-full max-w-md transform transition-all">
-        <div class="bg-info p-4 rounded-t-lg">
-            <h3 class="text-white text-lg font-bold flex items-center">
-                <i class="fa fa-pencil mr-2"></i> 编辑班级
-                <button id="closeEditClassModal" class="ml-auto text-white hover:text-gray-200">
-                    <i class="fa fa-times"></i>
-                </button>
-            </h3>
-        </div>
-        <div class="p-6">
-            <form id="editClassForm">
-                <div class="mb-4">
-                    <label for="editClassId" class="block text-sm font-medium text-gray-700 mb-1">班级 ID</label>
-                    <input type="text" id="editClassId" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-info focus:ring focus:ring-info/30 transition duration-200" readonly>
-                </div>
-                <div class="mb-4">
-                    <label for="editClassName" class="block text-sm font-medium text-gray-700 mb-1">班级名称</label>
-                    <input type="text" id="editClassName" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-info focus:ring focus:ring-info/30 transition duration-200" required>
-                </div>
-                <div class="flex justify-end space-x-4">
-                    <button type="button" id="cancelEditClass" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors">取消</button>
-                    <button type="submit" class="px-4 py-2 bg-info text-white rounded-md hover:bg-info/90 transition-colors">保存</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        // 模拟班级数据
-        let originalClasses = [];
-
-// 在DOMContentLoaded事件中，添加事件委托
-        document.getElementById('classesBody').addEventListener('click', (e) => {
-            const target = e.target.closest('button');
-            if (!target) return;
-
-            const row = target.closest('tr');
-            const classId = row.cells[0].textContent;
-            const className = row.cells[1].textContent; // 从表格单元格取名称
-
-            if (target.classList.contains('edit-btn')) {
-                editClass(classId, className); // 传两个参数
-            } else if (target.classList.contains('delete-btn')) {
-                confirmDeleteClass(classId, className);
-            }
-        });
-
-        // 初始化添加班级按钮点击事件
-        document.getElementById('addClassBtn').addEventListener('click', () => {
-            document.getElementById('addClassModal').classList.remove('hidden');
-            document.getElementById('addClassForm').reset();
-        });
-
-        // 初始化关闭添加班级模态框按钮
-        document.getElementById('closeClassModal').addEventListener('click', () => {
-            document.getElementById('addClassModal').classList.add('hidden');
-        });
-
-        // 初始化取消添加班级按钮
-        document.getElementById('cancelAddClass').addEventListener('click', () => {
-            document.getElementById('addClassModal').classList.add('hidden');
-        });
-
-        // 初始化添加班级表单提交事件
-        document.getElementById('addClassForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const id = document.getElementById('classId').value;
-            const name = document.getElementById('className').value;
-
-            // 1. 前端校验（可选，增强用户体验）
-            if (!id || !name) {
-                showNotification('error', '错误', '班级ID和名称不能为空');
-                return;
-            }
-
-            // 2. 禁用按钮，防止重复提交
-            const submitButton = e.target.querySelector('button[type="submit"]');
-            submitButton.disabled = true;
-            submitButton.textContent = '正在提交...';
-
-            fetch('/api/classes', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id, name })
-            })
-                .then(response => {
-                    if (response.ok) {
-                        return response.json();
-                    } else {
-                        return response.json().then(errorData => {
-                            throw new Error(errorData.error || `HTTP错误 ${response.status}`);
-                        });
-                    }
-                })
-                // 修改添加班级的成功回调
-                .then(data => {
-                    showNotification('success', '成功', '班级添加成功');
-                    originalClasses.push(data);
-                    loadClasses();
-
-                    // 关闭模态框
-                    const modal = document.getElementById('addClassModal');
-                    if (modal) modal.classList.add('hidden');
-                })
-
-                .catch(error => {
-                    showNotification('error', '失败', error.message);
-                })
-                .finally(() => {
-                    submitButton.disabled = false;
-                    submitButton.textContent = '添加班级';
-                    e.target.reset();
-                });
-        });
-
-        // 假设存在编辑表单提交事件
-        document.getElementById('editClassForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const id = document.getElementById('editClassId').value;
-            const name = document.getElementById('editClassName').value;
-
-            const updatedClass = { id, name };
-            console.log('Updating class:', updatedClass);
-
-            fetch(`/api/classes`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(newClass)
-            })
-                .then(response => {
-                    // 新增：打印完整响应状态码
-                    console.log('添加班级响应状态码:', response.status);
-                    // 严格判断状态码是否为 201（创建成功）
-                    if (response.status === 201) {
-                        return response.json(); // 解析成功响应
-                    } else {
-                        throw new Error(`请求失败，状态码: ${response.status}`); // 抛出异常以触发失败提示
-                    }
-                })
-                // 在addClassForm提交事件中，确保数据立即更新
-                .then(data => {
-                    showNotification('success', '成功', '班级添加成功');
-                    originalClasses.push(data); // 手动添加到数组
-                    loadClasses(); // 重新加载视图
-                    document.getElementById('addClassModal').classList.add('hidden');
-                })
-                .catch(error => {
-                    showNotification('error', '失败', '班级添加失败: ' + error.message);
-                    console.error('添加班级失败:', error);
-                });
-        });
-
-
-        // 初始化刷新按钮
-        document.getElementById('refreshClasses').addEventListener('click', loadClasses);
-
-        // 加载班级数据
-        function loadClasses() {
-            const classesBody = document.getElementById('classesBody');
-            classesBody.innerHTML = `
-        <tr class="text-center">
-            <td colspan="3" class="px-6 py-12 text-gray-500">
-                <i class="fa fa-spinner fa-spin text-2xl mb-2"></i>
-                <p>加载中...</p>
-            </td>
-        </tr>
-    `;
-
-            fetch('/api/classes')
-                .then(response => {
-                    console.log('Response status:', response.status);
-                    console.log('Response headers:', response.headers);
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    console.log('Received data:', data);
-                    originalClasses = data;
-                    classesBody.innerHTML = '';
-// 在loadClasses函数中，移除内联onclick事件
-                    data.forEach(classInfo => {
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${classInfo.id}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${classInfo.name}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <button onclick="editClass('${classInfo.id}', '${classInfo.name}')" class="text-indigo-600 hover:text-indigo-900 mr-3">
-                    <i class="fa fa-pencil"></i> 编辑
-                </button>
-                <button onclick="confirmDeleteClass('${classInfo.id}', '${classInfo.name}')" class="text-red-600 hover:text-red-900">
-                    <i class="fa fa-trash"></i> 删除
-                </button>
-            </td>
-        `;
-                        classesBody.appendChild(row);
-                    });
-                })
-                .catch(error => {
-                    console.error('Error loading classes:', error);
-                    classesBody.innerHTML = `
-                <tr class="text-center">
-                    <td colspan="3" class="px-6 py-12 text-gray-500">
-                        <i class="fa fa-exclamation-triangle text-2xl mb-2"></i>
-                        <p>加载班级数据失败: ${error.message}</p>
-                    </td>
-                </tr>
-            `;
-                });
-        }
-
-        // 初始加载班级数据
-        loadClasses();
-    });
-</script>
-</body>
-</html>
-
 <!-- 主要内容 -->
 <main class="flex-grow container mx-auto px-4 py-8">
     <!-- 学生管理 -->
-    <div id="studentsSection" class="hidden"> <!-- 添加 hidden 类 -->
-<!--        class="hidden"是首页显示的意思      -->
+    <div id="studentsSection">
         <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
             <div class="bg-primary p-4">
                 <h2 class="text-white text-xl font-bold flex items-center">
@@ -743,27 +439,27 @@
         notification.style.right = '-100%';
 
         // 初始化选项卡切换
-
-
         document.getElementById('studentsTab').addEventListener('click', () => {
-            // 隐藏所有模块
-            document.getElementById('classesSection').classList.add('hidden'); // 隐藏班级模块
-            document.getElementById('teachersSection').classList.add('hidden'); // 隐藏教师模块
-            // 显示学生模块并更新样式
             document.getElementById('studentsTab').classList.add('text-primary', 'border-b-2', 'border-primary');
             document.getElementById('studentsTab').classList.remove('text-gray-500');
+            document.getElementById('teachersTab').classList.remove('text-secondary', 'border-b-2', 'border-secondary');
+            document.getElementById('teachersTab').classList.add('text-gray-500');
             document.getElementById('studentsSection').classList.remove('hidden');
+            document.getElementById('teachersSection').classList.add('hidden');
+
+            // 加载学生数据
             loadStudents();
         });
 
         document.getElementById('teachersTab').addEventListener('click', () => {
-            // 隐藏所有模块
-            document.getElementById('classesSection').classList.add('hidden'); // 隐藏班级模块
-            document.getElementById('studentsSection').classList.add('hidden'); // 隐藏学生模块
-            // 显示教师模块并更新样式
             document.getElementById('teachersTab').classList.add('text-secondary', 'border-b-2', 'border-secondary');
             document.getElementById('teachersTab').classList.remove('text-gray-500');
+            document.getElementById('studentsTab').classList.remove('text-primary', 'border-b-2', 'border-primary');
+            document.getElementById('studentsTab').classList.add('text-gray-500');
             document.getElementById('teachersSection').classList.remove('hidden');
+            document.getElementById('studentsSection').classList.add('hidden');
+
+            // 加载教师数据
             loadTeachers();
         });
 
@@ -810,10 +506,7 @@
             document.getElementById('editTeacherModal').classList.add('hidden');
         });
 
-        document.getElementById('confirmDelete').addEventListener('click', () => {
-            if (currentEntityType === 'class') {
-                deleteClass();
-            }
+        document.getElementById('cancelDelete').addEventListener('click', () => {
             document.getElementById('confirmDeleteModal').classList.add('hidden');
         });
 
@@ -843,30 +536,13 @@
         });
 
         document.getElementById('confirmDelete').addEventListener('click', () => {
-            if (currentEntityType === 'class') {
-                deleteClass();
-            } else if (currentEntityType === 'student') {
+            if (currentEntityType === 'student') {
                 deleteStudent();
             } else if (currentEntityType === 'teacher') {
                 deleteTeacher();
             }
             document.getElementById('confirmDeleteModal').classList.add('hidden');
-            resetDeleteState(); // 重置删除状态
         });
-        // 取消删除按钮事件（新增）
-        document.getElementById('cancelDelete').addEventListener('click', () => {
-            document.getElementById('confirmDeleteModal').classList.add('hidden');
-            resetDeleteState(); // 重置删除状态
-        });
-
-        // 重置删除相关状态（新增）
-        function resetDeleteState() {
-            currentEntityType = null;
-            currentStudentId = null;
-            currentTeacherId = null;
-            // 如果有班级ID变量，也需要重置
-            // currentClassId = null;
-        }
 
         // 初始化刷新按钮
         document.getElementById('refreshStudents').addEventListener('click', loadStudents);
@@ -983,284 +659,6 @@
             </tr>
         `;
         }
-    }
-    // 模拟数据 - 班级
-    const mockClasses = [
-        { id: 'C2025001', name: '一年级一班' },
-        { id: 'C2025002', name: '一年级二班' }
-    ];
-
-    let originalClasses = [...mockClasses];
-
-    // DOM 加载完成后执行
-
-    document.getElementById('classesTab').addEventListener('click', () => {
-        // 隐藏学生和教师模块
-        document.getElementById('studentsSection').classList.add('hidden');
-        document.getElementById('teachersSection').classList.add('hidden');
-        // 显示班级模块并更新样式
-        document.getElementById('classesTab').classList.add('text-info', 'border-b-2', 'border-info');
-        document.getElementById('classesTab').classList.remove('text-gray-500');
-        document.getElementById('classesSection').classList.remove('hidden');
-        loadClasses();
-    });
-    document.addEventListener('DOMContentLoaded', () => {
-        // 初始化选项卡切换
-        document.getElementById('studentsTab').addEventListener('click', () => {
-            // 原有的学生选项卡点击逻辑
-        });
-
-        document.getElementById('teachersTab').addEventListener('click', () => {
-            // 原有的教师选项卡点击逻辑
-        });
-
-        document.getElementById('classesTab').addEventListener('click', () => {
-            document.getElementById('classesTab').classList.add('text-info', 'border-b-2', 'border-info');
-            document.getElementById('classesTab').classList.remove('text-gray-500');
-            document.getElementById('studentsTab').classList.remove('text-primary', 'border-b-2', 'border-primary');
-            document.getElementById('studentsTab').classList.add('text-gray-500');
-            document.getElementById('teachersTab').classList.remove('text-secondary', 'border-b-2', 'border-secondary');
-            document.getElementById('teachersTab').classList.add('text-gray-500');
-            document.getElementById('classesSection').classList.remove('hidden');
-            document.getElementById('studentsSection').classList.add('hidden');
-            document.getElementById('teachersSection').classList.add('hidden');
-
-            // 加载班级数据
-            loadClasses();
-        });
-
-        // 初始化模态框事件
-        document.getElementById('addClassBtn').addEventListener('click', () => {
-            document.getElementById('addClassModal').classList.remove('hidden');
-            document.getElementById('addClassForm').reset();
-        });
-
-        document.getElementById('closeClassModal').addEventListener('click', () => {
-            document.getElementById('addClassModal').classList.add('hidden');
-        });
-
-        document.getElementById('cancelAddClass').addEventListener('click', () => {
-            document.getElementById('addClassModal').classList.add('hidden');
-        });
-
-        document.getElementById('closeEditClassModal').addEventListener('click', () => {
-            document.getElementById('editClassModal').classList.add('hidden');
-        });
-
-        document.getElementById('cancelEditClass').addEventListener('click', () => {
-            document.getElementById('editClassModal').classList.add('hidden');
-        });
-
-        // 初始化表单提交事件
-        document.getElementById('addClassForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            addClass();
-        });
-
-        document.getElementById('editClassForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            updateClass();
-        });
-
-        // 初始化刷新按钮
-        document.getElementById('refreshClasses').addEventListener('click', loadClasses);
-
-        // 初始化搜索功能
-        document.getElementById('classSearch').addEventListener('input', () => {
-            filterClasses();
-        });
-
-        // 初始加载学生数据
-        loadStudents();
-    });
-
-    function loadClasses() {
-        const classesBody = document.getElementById('classesBody');
-        classesBody.innerHTML = `
-        <tr class="text-center">
-            <td colspan="3" class="px-6 py-12 text-gray-500">
-                <i class="fa fa-spinner fa-spin text-2xl mb-2"></i>
-                <p>加载中...</p>
-            </td>
-        </tr>
-    `;
-
-        fetch('/api/classes')
-            .then(response => {
-                console.log('Response status:', response.status);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log('Received data:', data);
-                originalClasses = data;
-                classesBody.innerHTML = '';
-                data.forEach(classInfo => {
-                    const row = document.createElement('tr');
-                    row.className = 'hover:bg-gray-50 transition-colors duration-150';
-                    row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${classInfo.id}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${classInfo.name}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button onclick="editClass('${classInfo.id}')" class="text-indigo-600 hover:text-indigo-900 mr-3">
-                            <i class="fa fa-pencil"></i> 编辑
-                        </button>
-                        <button onclick="confirmDeleteClass('${classInfo.id}', '${classInfo.name}')" class="text-red-600 hover:text-red-900">
-                            <i class="fa fa-trash"></i> 删除
-                        </button>
-                    </td>
-                `;
-                    classesBody.appendChild(row);
-                });
-            })
-            .catch(error => {
-                console.error('Error loading classes:', error);
-                classesBody.innerHTML = `
-                <tr class="text-center">
-                    <td colspan="3" class="px-6 py-12 text-gray-500">
-                        <i class="fa fa-exclamation-triangle text-2xl mb-2"></i>
-                        <p>加载班级数据失败: ${error.message}</p>
-                    </td>
-                </tr>
-            `;
-            });
-    }
-    // 编辑班级
-    function editClass(id, name) {
-        // 直接使用传递的ID和名称，避免从originalClasses查找
-        console.log('编辑班级参数 - ID:', id, '名称:', name);
-
-        // 参数校验：若name为空，尝试从originalClasses中获取
-        if (!name) {
-            const classInfo = originalClasses.find(cls => cls.id === id);
-            name = classInfo?.name || '';
-            console.warn('从originalClasses中获取名称:', name);
-        }
-
-        document.getElementById('editClassId').value = id;
-        document.getElementById('editClassName').value = name;
-        document.getElementById('editClassModal').classList.remove('hidden');
-    }
-    // 更新班级
-    function updateClass() {
-        const id = document.getElementById('editClassId').value;
-        const name = document.getElementById('editClassName').value;
-
-        const updatedClass = { id, name };
-        console.log('Updating class:', updatedClass);
-
-        fetch(`/api/classes/${id}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(updatedClass)
-        })
-            .then(response => {
-                console.log('Update class response status:', response.status);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                showNotification('success', '成功', '班级更新成功');
-                document.getElementById('editClassModal').classList.add('hidden');
-                loadClasses();
-            })
-            .catch(error => {
-                console.error('Error updating class:', error);
-                showNotification('error', '失败', '班级更新失败: ' + error.message);
-            });
-    }
-
-
-
-    // 确认删除班级
-    function confirmDeleteClass(id, name) {
-        currentEntityType = 'class';
-        currentClassId = id;
-        console.log('确认删除班级，ID:', currentClassId); // 输出 ID 值
-        document.getElementById('deleteMessage').textContent = `你确定要删除班级 "${name}" 吗？此操作不可撤销。`;
-        document.getElementById('confirmDeleteModal').classList.remove('hidden');
-    }
-
-    // 删除班级
-    function deleteClass() {
-        if (!currentClassId) {
-            console.log('currentClassId 未定义');
-            return;
-        }
-        console.log('开始删除班级，ID:', currentClassId); // 输出 ID 值
-
-        fetch(`/api/classes/${currentClassId}`, {
-            method: 'DELETE'
-        })
-            .then(response => {
-                console.log('删除班级响应状态码:', response.status);
-                if (response.ok) {
-                    showNotification('success', '成功', '班级删除成功');
-                    originalClasses = originalClasses.filter(classInfo => classInfo.id!== currentClassId);
-                    loadClasses();
-                    document.getElementById('confirmDeleteModal').classList.add('hidden');
-                } else {
-                    showNotification('error', '失败', '班级删除失败');
-                }
-            })
-            .catch(error => {
-                showNotification('error', '失败', '班级删除失败: ' + error.message);
-                console.error('删除班级出错:', error);
-            });
-    }
-
-    // 搜索班级
-    function filterClasses() {
-        const searchTerm = document.getElementById('classSearch').value.toLowerCase();
-
-        if (!searchTerm) {
-            loadClasses();
-            return;
-        }
-
-        const filteredClasses = originalClasses.filter(classInfo =>
-            classInfo.id.toLowerCase().includes(searchTerm) ||
-            classInfo.name.toLowerCase().includes(searchTerm)
-        );
-
-        const classesBody = document.getElementById('classesBody');
-
-        if (filteredClasses.length === 0) {
-            classesBody.innerHTML = `
-            <tr class="text-center">
-                <td colspan="3" class="px-6 py-12 text-gray-500">
-                    <i class="fa fa-search text-2xl mb-2"></i>
-                    <p>未找到匹配的班级</p>
-                </td>
-            </tr>
-        `;
-            return;
-        }
-
-        classesBody.innerHTML = '';
-        filteredClasses.forEach(classInfo => {
-            const row = document.createElement('tr');
-            row.className = 'hover:bg-gray-50 transition-colors duration-150';
-            row.innerHTML = `
-            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${classInfo.id}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${classInfo.name}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-            <button onclick="editClass('${classInfo.id}', '${classInfo.name}')" class="text-indigo-600 hover:text-indigo-900 mr-3">
-                <i class="fa fa-pencil"></i> 编辑
-            </button>
-                <button onclick="confirmDeleteClass('${classInfo.id}', '${classInfo.name}')" class="text-red-600 hover:text-red-900">
-                <i class="fa fa-trash"></i> 删除
-                </button>
-            </td>
-        `;
-            classesBody.appendChild(row);
-        });
     }
 
     // 添加学生
