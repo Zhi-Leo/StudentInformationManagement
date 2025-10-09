@@ -3,7 +3,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <title>学生教师管理系统</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -61,58 +61,58 @@
     <!-- 登录表单 -->
     <form id="loginForm">
         <div class="mb-4">
-            <label for="uid" class="block text-sm font-medium text-gray-700 mb-1">账号</label>
-            <input type="text" id="uid"
-                   class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary/30 transition duration-200"
-                   required>
+            <label class="block text-sm font-medium text-gray-700 mb-1" for="uid">账号</label>
+            <input class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary/30 transition duration-200" id="uid"
+                   required
+                   type="text">
         </div>
         <div class="mb-6">
-            <label for="upass" class="block text-sm font-medium text-gray-700 mb-1">密码</label>
-            <input type="password" id="upass"
-                   class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary/30 transition duration-200"
-                   required>
+            <label class="block text-sm font-medium text-gray-700 mb-1" for="upass">密码</label>
+            <input class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary/30 transition duration-200" id="upass"
+                   required
+                   type="password">
         </div>
         <div class="flex justify-center space-x-4">
-            <button type="submit"
-                    class="px-6 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors">登录
+            <button class="px-6 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
+                    type="submit">登录
             </button>
-            <button type="button" id="registerBtn"
-                    class="px-6 py-2 bg-secondary text-white rounded-md hover:bg-secondary/90 transition-colors">注册
+            <button class="px-6 py-2 bg-secondary text-white rounded-md hover:bg-secondary/90 transition-colors" id="registerBtn"
+                    type="button">注册
             </button>
         </div>
     </form>
     <!-- 注册表单，初始隐藏 -->
-    <form id="registerForm" class="hidden">
+    <form class="hidden" id="registerForm">
         <div class="mb-4">
-            <label for="newUid" class="block text-sm font-medium text-gray-700 mb-1">新账号</label>
-            <input type="text" id="newUid"
-                   class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary/30 transition duration-200"
-                   required>
+            <label class="block text-sm font-medium text-gray-700 mb-1" for="newUid">新账号</label>
+            <input class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary/30 transition duration-200" id="newUid"
+                   required
+                   type="text">
         </div>
         <div class="mb-4">
-            <label for="newUpass" class="block text-sm font-medium text-gray-700 mb-1">新密码</label>
-            <input type="password" id="newUpass"
-                   class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary/30 transition duration-200"
-                   required>
+            <label class="block text-sm font-medium text-gray-700 mb-1" for="newUpass">新密码</label>
+            <input class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary/30 transition duration-200" id="newUpass"
+                   required
+                   type="password">
         </div>
         <div class="mb-4">
-            <label for="adminUid" class="block text-sm font-medium text-gray-700 mb-1">管理员账号</label>
-            <input type="text" id="adminUid"
-                   class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary/30 transition duration-200"
-                   required>
+            <label class="block text-sm font-medium text-gray-700 mb-1" for="adminUid">管理员账号</label>
+            <input class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary/30 transition duration-200" id="adminUid"
+                   required
+                   type="text">
         </div>
         <div class="mb-6">
-            <label for="adminUpass" class="block text-sm font-medium text-gray-700 mb-1">管理员密码</label>
-            <input type="password" id="adminUpass"
-                   class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary/30 transition duration-200"
-                   required>
+            <label class="block text-sm font-medium text-gray-700 mb-1" for="adminUpass">管理员密码</label>
+            <input class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary/30 transition duration-200" id="adminUpass"
+                   required
+                   type="password">
         </div>
         <div class="flex justify-center space-x-4">
-            <button type="submit"
-                    class="px-6 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors">提交注册
+            <button class="px-6 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
+                    type="submit">提交注册
             </button>
-            <button type="button" id="cancelRegisterBtn"
-                    class="px-6 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors">取消
+            <button class="px-6 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors" id="cancelRegisterBtn"
+                    type="button">取消
             </button>
         </div>
     </form>

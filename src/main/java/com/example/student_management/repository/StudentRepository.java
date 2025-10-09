@@ -6,7 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
-import java.util.Map;
 
 // JpaRepository<实体类, 主键类型>
 public interface StudentRepository extends JpaRepository<Student, String> {
@@ -18,13 +17,14 @@ public interface StudentRepository extends JpaRepository<Student, String> {
     @Query("SELECT s.clas AS classId, COUNT(s) AS studentCount FROM Student s GROUP BY s.clas")
     List<ClassStudentCount> countStudentsByClass();
 
+    // 添加 countByClas 方法
+    int countByClas(String clas);
+
+
     // 添加一个接口来表示查询结果
     interface ClassStudentCount {
         String getClassId();
+
         Long getStudentCount();
     }
-
-
-    // 添加 countByClas 方法
-    int countByClas(String clas);
 }

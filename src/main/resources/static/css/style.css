@@ -1,12 +1,13 @@
-        @layer utilities {
-            .content-auto {
-                content-visibility: auto;
-            }
-        }
-        body {
-            /* 设置背景图 */
-            background-image: url('../唯美少女 马尾辫4K动漫壁纸3840_2160_彼岸图网.jpg');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-        }
+@layer utilities {
+    .content-auto {
+        content-visibility: auto;
+    }
+}
+
+body {
+    /* 设置背景图 */
+    background-image: url('../唯美少女 马尾辫4K动漫壁纸3840_2160_彼岸图网.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}

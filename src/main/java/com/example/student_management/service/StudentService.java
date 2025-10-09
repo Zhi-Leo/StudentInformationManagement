@@ -13,6 +13,10 @@ public class StudentService {
     @Autowired // 自动注入 Repository
     private StudentRepository studentRepository;
 
+    public StudentService(StudentRepository studentRepository) {
+        this.studentRepository = studentRepository;
+    }
+
     // 获取所有学生
     public List<Student> getAllStudents() {
         return studentRepository.findAll();
@@ -23,14 +27,12 @@ public class StudentService {
         Optional<Student> optional = studentRepository.findById(id);
         return optional.orElse(null); // 存在则返回学生，否则返回 null
     }
-    public StudentService(StudentRepository studentRepository) {
-        this.studentRepository = studentRepository;
-    }
 
     // 添加学生
     public Student addStudent(Student student) {
         return studentRepository.save(student);
     }
+
     // 更新学生
     public Student updateStudent(Student student) {
         // 检查学生是否存在

@@ -25,7 +25,8 @@ public class ClassInfo {
     private Integer studentCount;
 
     // 无参构造函数（必须有，JPA要求）
-    public ClassInfo() {}
+    public ClassInfo() {
+    }
 
     // 全参构造函数（可选）
     public ClassInfo(String id, String name, String headTeacher, Integer studentCount) {
@@ -36,13 +37,36 @@ public class ClassInfo {
     }
 
     // Getters 和 Setters（必须有，否则JSON序列化失败）
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-    public String getHeadTeacher() { return headTeacher==null ? "暂无" : headTeacher; }
-    public void setHeadTeacher(String headTeacher) { this.headTeacher = headTeacher; }
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getHeadTeacher() {
+        return headTeacher == null ? "暂无" : headTeacher;
+    }
+
+    public void setHeadTeacher(String headTeacher) {
+        this.headTeacher = headTeacher;
+    }
+
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    public Integer getStudentCount() {return studentCount == null ? 0 : studentCount;}
-    public void setStudentCount(Integer studentCount) { this.studentCount = studentCount; }
+    public Integer getStudentCount() {
+        return studentCount == null ? 0 : studentCount;
+    }
+
+    public void setStudentCount(Integer studentCount) {
+        this.studentCount = studentCount;
+    }
 }

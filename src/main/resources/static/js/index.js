@@ -125,6 +125,7 @@ function initSharedEvents() {
     initDeleteModal();// 删除模态框事件
     initLogout();     // 退出登录
 }
+
 // 初始化首页按钮
 function initHomeButton() {
     document.getElementById('homeBtn')?.addEventListener('click', () => {
@@ -169,10 +170,13 @@ function initTabs() {
     // 其他页面正常判断选中状态
     else if (currentPath.includes('class')) {
         setActiveTab('classesTab', 'info');
-    } else if (currentPath.includes('student')) {
-        setActiveTab('studentsTab', 'primary');
-    } else if (currentPath.includes('teacher')) {
+    }  else if (currentPath.includes('teacher')) {
         setActiveTab('teachersTab', 'secondary');
+    }else if (currentPath.includes('student')) {
+        setActiveTab('studentsTab', 'primary');
+    }else {
+        // 添加默认处理，比如选中首页或清空状态
+        setActiveTab('homeTab', 'default');
     }
 }
 
