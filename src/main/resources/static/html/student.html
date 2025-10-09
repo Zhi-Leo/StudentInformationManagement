@@ -8,38 +8,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
     <!-- Tailwind 配置 -->
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#3B82F6',    // 蓝色（学生管理）
-                        secondary: '#10B981',  // 绿色（教师管理）
-                        danger: '#EF4444',     // 红色（删除/危险）
-                        warning: '#F59E0B',    // 黄色（编辑）
-                        info: '#6366F1'        // 靛蓝色（班级管理）
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'system-ui', 'sans-serif'],
-                    },
-                }
-            }
-        }
-    </script>
-    <style type="text/tailwindcss">
-        @layer utilities {
-            .content-auto {
-                content-visibility: auto;
-            }
-        }
-        body {
-            /* 设置背景图 */
-            background-image: url('../唯美少女 马尾辫4K动漫壁纸3840_2160_彼岸图网.jpg');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-        }
-    </style>
 </head>
 <body class="bg-gray-50 min-h-screen flex flex-col">
 <!-- 导航栏容器 -->
@@ -84,7 +52,6 @@
                                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 学号
                             </th>
-                            <!-- 新增班级列 -->
                             <th scope="col"
                                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 班级
@@ -249,9 +216,11 @@
         </div>
     </div>
 </div>
-
+<!-- 引入css -->
+<link rel="stylesheet" href="../css/style.css">
 <!-- 引入JS -->
 <script src="../js/index.js"></script>
 <script src="../js/student.js"></script>
+<script src="../js/style.js"></script>
 </body>
 </html>
