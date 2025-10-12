@@ -11,3 +11,12 @@ body {
     background-position: center;
     background-repeat: no-repeat;
 }
+
+#teacherClass, #editTeacherClass {
+    caret-color: #374151 !important; /* 深灰色光标，确保可见 */
+}
+
+/* 聚焦时的样式增强 */
+#teacherClass:focus, #editTeacherClass:focus {
+    outline: 2px solid rgba(59, 130, 246, 0.5); /* 蓝色聚焦边框 */
+}

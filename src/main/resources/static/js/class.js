@@ -4,6 +4,17 @@ let originalClasses = [];
 // DOM加载完成后初始化
 // 页面加载完成初始化（替换原DOMContentLoaded事件）
 document.addEventListener('DOMContentLoaded', () => {
+    // 第一步：登录状态校验（核心）
+    const isLoggedIn = localStorage.getItem('isLoggedIn');
+    if (!isLoggedIn || isLoggedIn !== 'true') {
+        alert('请先登录后再访问班级管理页面！');
+        window.location.href = 'login.html';
+        return;
+    }
+
+    // 2. 初始化自动登出（关键：登录通过后才启动）
+    // initAutoLogout();
+
     initClassEvents(); // 初始化班级基础事件
     loadClasses(); // 加载班级数据
     loadTeachers(); // 加载教师数据（供下拉框使用）

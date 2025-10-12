@@ -3,6 +3,13 @@ let originalStudents = [];
 let originalClasses = []; // 存储班级列表（仅用名称，无需ID）
 
 document.addEventListener('DOMContentLoaded', () => {
+    // 第一步：登录状态校验（核心）
+    const isLoggedIn = localStorage.getItem('isLoggedIn');
+    if (!isLoggedIn || isLoggedIn !== 'true') {
+        alert('请先登录后再访问学生管理页面！');
+        window.location.href = 'login.html';
+        return;
+    }
     initStudentEvents();
     // 并行加载学生和班级数据，初始化下拉框
     Promise.all([loadStudents(), loadClasses()]).then(() => {
@@ -153,10 +160,10 @@ function loadNavbar() {
         .then(html => {
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, 'text/html');
-            const tpl = doc.getElementById('navbarTpl');
+            const tpl = doc.getElementById('navbarTpl'); // 仅取导航栏模板
             if (tpl && document.getElementById('navbarContainer')) {
                 document.getElementById('navbarContainer').innerHTML = tpl.innerHTML;
-                initNavbar();
+                initNavbar(); // 初始化导航栏事件（仅退出登录、选项卡切换）
             }
         })
         .catch(err => console.error('加载导航栏失败:', err));
@@ -169,6 +176,7 @@ function initNavbar() {
         studentsTab.classList.add('text-primary', 'border-b-2', 'border-primary');
         studentsTab.classList.remove('text-gray-500');
     }
+    // 退出登录逻辑（仅清除状态，无校验）
     document.getElementById('logoutBtn')?.addEventListener('click', () => {
         if (confirm('确定退出登录吗？')) {
             localStorage.removeItem('isLoggedIn');

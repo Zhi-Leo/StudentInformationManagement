@@ -3,6 +3,13 @@ let originalTeachers = [];
 let originalClasses = []; // 新增：存储班级列表（供下拉框使用）
 
 document.addEventListener('DOMContentLoaded', () => {
+    // 第一步：登录状态校验（核心）
+    const isLoggedIn = localStorage.getItem('isLoggedIn');
+    if (!isLoggedIn || isLoggedIn !== 'true') {
+        alert('请先登录后再访问教师管理页面！');
+        window.location.href = 'login.html';
+        return;
+    }
     initTeacherEvents();
     // 并行加载教师和班级数据
     Promise.all([loadTeachers(), loadClasses()]).then(() => {
@@ -78,10 +85,11 @@ function initClassDropdown(inputId, dropdownId) {
         }
     });
 
-    // 获焦时显示下拉框
     classInput.addEventListener('focus', () => {
         const currentVal = classInput.value.trim().toLowerCase();
         filterAndShowClasses(currentVal, inputId, dropdownId);
+        // 新增：主动触发输入框的聚焦状态（确保光标显示）
+        classInput.select(); // 可选：选中现有内容，增强交互
     });
 }
 
@@ -171,6 +179,10 @@ function addTeacher() {
         return;
     }
 
+    // 新增：班主任班级分配校验
+    if (!checkHeadTeacherRestriction(id, name, clas)) {
+        return;
+    }
     const submitBtn = document.querySelector('#addTeacherForm button[type="submit"]');
     submitBtn.disabled = true;
     submitBtn.textContent = '提交中...';
@@ -214,6 +226,11 @@ function updateTeacher() {
         return;
     }
 
+    // 新增：班主任班级分配校验
+    if (!checkHeadTeacherRestriction(id, name, clas)) {
+        return;
+    }
+
     fetch(`/api/teachers/${id}`, {
         method: 'PUT',
         headers: {'Content-Type': 'application/json'},
@@ -238,10 +255,23 @@ function updateTeacher() {
 
 // 初始化事件监听（修改版）
 function initTeacherEvents() {
-    // 模态框控制（添加教师）
+    // 在initTeacherEvents函数中，修改添加教师按钮的点击事件
     document.getElementById('addTeacherBtn')?.addEventListener('click', () => {
-        document.getElementById('addTeacherModal').classList.remove('hidden');
+        const modal = document.getElementById('addTeacherModal');
+        modal.classList.remove('hidden');
         document.getElementById('addTeacherForm').reset();
+
+        // 关键修改：监听模态框过渡结束后再聚焦
+        const focusInput = () => {
+            const classInput = document.getElementById('teacherClass');
+            classInput.focus();
+            modal.removeEventListener('transitionend', focusInput); // 只执行一次
+        };
+
+        // 等待模态框动画结束（如果有transition动画）
+        modal.addEventListener('transitionend', focusInput);
+        // 兼容无动画的情况，延迟触发
+        setTimeout(focusInput, 300);
     });
     document.getElementById('closeTeacherModal')?.addEventListener('click', () => {
         document.getElementById('addTeacherModal').classList.add('hidden');
@@ -440,4 +470,47 @@ function filterTeachers() {
     });
 
     renderTeachers(filteredTeachers);
+}
+
+// 新增：校验班主任的班级分配限制
+// 修复：校验班主任的班级分配限制
+function checkHeadTeacherRestriction(teacherId, teacherName, targetClass) {
+    // 1. 调试日志：确认参数是否正确
+    console.log('校验班主任限制：', {
+        teacherId,       // 教师ID
+        teacherName,     // 教师姓名（用于匹配headTeacher）
+        targetClass,     // 目标班级（名称）
+        originalClasses  // 所有班级数据
+    });
+
+    // 2. 查找该教师作为班主任的所有班级（优先用姓名匹配，因为headTeacher可能存姓名）
+    // 若实际存ID，将下面的teacherName改为teacherId
+    const teacherAsHead = originalClasses.filter(
+        cls => cls.headTeacher?.trim() === teacherName.trim()
+    );
+
+    // 3. 调试日志：确认是否找到班主任班级
+    console.log('该教师作为班主任的班级：', teacherAsHead);
+
+    // 4. 若教师不是任何班级的班主任，无限制
+    if (teacherAsHead.length === 0) {
+        return true;
+    }
+
+    // 5. 目标班级必须是其负责的班级之一（或为空）
+    // 输入框存的是班级名称，只需要匹配名称
+    const isTargetValid = targetClass.trim() === '' ||
+        teacherAsHead.some(cls => cls.name.trim() === targetClass.trim());
+
+    if (!isTargetValid) {
+        // 提示可分配的班级（显示名称）
+        const allowedClasses = teacherAsHead.map(cls => cls.name).join('、');
+        window.showNotification(
+            'error',
+            '分配失败',
+            `该教师是以下班级的班主任，只能分配到这些班级：${allowedClasses}`
+        );
+    }
+
+    return isTargetValid;
 }

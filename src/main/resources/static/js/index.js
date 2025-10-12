@@ -4,20 +4,19 @@ let currentId = null;
 
 // DOM加载完成后初始化
 document.addEventListener('DOMContentLoaded', () => {
+    // 第一步：先验证登录状态（未登录则跳转）
+    const isLoggedIn = localStorage.getItem('isLoggedIn');
+    if (!isLoggedIn || isLoggedIn !== 'true') {
+        alert('请先登录后再访问主页！');
+        window.location.href = 'login.html'; // 强制跳转到登录页
+        return; // 终止后续代码执行，避免页面继续加载
+    }
 
-    // 动态加载导航栏、页脚和模态框
-    loadSharedComponents();
-    // 初始化共用事件
-    initSharedEvents();
+    // 第二步：验证通过后，再执行原有初始化逻辑
+    loadSharedComponents(); // 加载导航栏、页脚等
+    initSharedEvents();     // 初始化共用事件
+    startTicker();          // 启动环形滚动
 });
-// 在index.js中添加以下代码
-document.addEventListener('DOMContentLoaded', () => {
-    // 其他初始化代码...
-
-    // 启动环形滚动
-    startTicker();
-});
-
 function startTicker() {
     const ticker = document.getElementById('ticker-content');
     if (ticker) {
@@ -32,6 +31,7 @@ function startTicker() {
 
 // 加载共用组件（导航栏、页脚、删除模态框）
 function loadSharedComponents() {
+    
     // 1. 加载导航栏
     const navbarHtml = `
         <nav class="bg-white/50 shadow-md">
