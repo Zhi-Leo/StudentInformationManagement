@@ -118,12 +118,19 @@
                            required
                            type="text">
                 </div>
-                <!-- 新增班级输入框 -->
+                <!-- 添加教师模态框 - 班级输入框 + 下拉框 -->
                 <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1" for="teacherClass">班级</label>
-                    <input class="block w-full rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring focus:ring-secondary/30 transition duration-200" id="teacherClass"
-                           required
-                           type="text">
+                    <label class="block text-sm font-medium text-gray-700 mb-1" for="teacherClass">所属班级 <span class="text-red-500">*</span></label>
+                    <div class="relative">
+                        <input
+                                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-info focus:ring focus:ring-info/30 transition duration-200"
+                                id="teacherClass"
+                                type="text"
+                                placeholder="输入班级名称搜索或从下拉选择..."
+                        >
+                        <!-- 班级下拉框容器 -->
+                        <div id="addTeacherClassDropdown" class="hidden absolute z-10 left-0 right-0 mt-1 bg-white shadow-lg rounded-md max-h-60 overflow-y-auto"></div>
+                    </div>
                 </div>
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1" for="teacherAge">年龄</label>
@@ -143,7 +150,6 @@
                 <div class="mb-6">
                     <label class="block text-sm font-medium text-gray-700 mb-1" for="teacherTeaching">科目</label>
                     <input class="block w-full rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring focus:ring-secondary/30 transition duration-200" id="teacherTeaching"
-                           required
                            type="text">
                 </div>
                 <div class="flex justify-end space-x-4">
@@ -185,12 +191,19 @@
                            required
                            type="text">
                 </div>
-                <!-- 新增班级编辑框 -->
+                <!-- 编辑教师模态框 - 班级输入框 + 下拉框 -->
                 <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1" for="editTeacherClass">班级</label>
-                    <input class="block w-full rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring focus:ring-secondary/30 transition duration-200" id="editTeacherClass"
-                           required
-                           type="text">
+                    <label class="block text-sm font-medium text-gray-700 mb-1" for="editTeacherClass">所属班级 <span class="text-red-500">*</span></label>
+                    <div class="relative">
+                        <input
+                                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-info focus:ring focus:ring-info/30 transition duration-200"
+                                id="editTeacherClass"
+                                type="text"
+                                placeholder="输入班级名称搜索或从下拉选择..."
+                        >
+                        <!-- 班级下拉框容器 -->
+                        <div id="editTeacherClassDropdown" class="hidden absolute z-10 left-0 right-0 mt-1 bg-white shadow-lg rounded-md max-h-60 overflow-y-auto"></div>
+                    </div>
                 </div>
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1" for="editTeacherAge">年龄</label>
@@ -210,7 +223,6 @@
                 <div class="mb-6">
                     <label class="block text-sm font-medium text-gray-700 mb-1" for="editTeacherTeaching">科目</label>
                     <input class="block w-full rounded-md border-gray-300 shadow-sm focus:border-secondary focus:ring focus:ring-secondary/30 transition duration-200" id="editTeacherTeaching"
-                           required
                            type="text">
                 </div>
                 <div class="flex justify-end space-x-4">

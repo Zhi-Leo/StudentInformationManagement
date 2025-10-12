@@ -1,30 +1,24 @@
 package com.example.student_management.repository;
 
-
 import com.example.student_management.entity.Student;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-
 import java.util.List;
 
-// JpaRepository<实体类, 主键类型>
 public interface StudentRepository extends JpaRepository<Student, String> {
-    // 继承 JpaRepository 已包含基本 CRUD 方法
-    // 可在此添加自定义查询方法（如按姓名查询）
-    List<Student> findByName(String name); // 自动生成按姓名查询的方法
+    // 按姓名查询学生（不变）
+    List<Student> findByName(String name);
 
-    // 修改此方法，使用正确的查询和返回类型
-    @Query("SELECT s.clas AS classId, COUNT(s) AS studentCount FROM Student s GROUP BY s.clas")
+    // 修正：按班级名称（s.clas）分组统计，结果字段名为className（而非classId）
+    @Query("SELECT s.clas AS className, COUNT(s) AS studentCount FROM Student s GROUP BY s.clas")
     List<ClassStudentCount> countStudentsByClass();
 
-    // 添加 countByClas 方法
+    // 按班级名称统计学生数量（clas是班级名称，与学生表字段对应）
     int countByClas(String clas);
 
-
-    // 添加一个接口来表示查询结果
+    // 修正：统计结果接口的字段名（className而非classId）
     interface ClassStudentCount {
-        String getClassId();
-
+        String getClassName(); // 对应查询中的"className"
         Long getStudentCount();
     }
 }

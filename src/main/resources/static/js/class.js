@@ -2,9 +2,15 @@
 let originalClasses = [];
 
 // DOM加载完成后初始化
+// 页面加载完成初始化（替换原DOMContentLoaded事件）
 document.addEventListener('DOMContentLoaded', () => {
-    initClassEvents();
-    loadClasses();
+    initClassEvents(); // 初始化班级基础事件
+    loadClasses(); // 加载班级数据
+    loadTeachers(); // 加载教师数据（供下拉框使用）
+
+    // 同时初始化「新增」和「编辑」的教师下拉框
+    initTeacherDropdown('headTeacher', 'teacherDropdown', 'headTeacherId'); // 新增班级
+    initTeacherDropdown('editHeadTeacher', 'editTeacherDropdown', 'editHeadTeacherId'); // 编辑班级
 });
 
 // 初始化班级相关事件
@@ -53,7 +59,7 @@ function initClassEvents() {
     // 搜索班级
     document.getElementById('classSearch')?.addEventListener('input', filterClasses);
 
-    // 表格行点击事件（编辑/删除）
+    // 表格行点击事件（编辑/删除）- 关键修改：增加headTeacherId传递
     document.getElementById('classesBody')?.addEventListener('click', (e) => {
         const target = e.target.closest('button, .fa-pencil, .fa-trash');
         if (!target) return;
@@ -61,13 +67,15 @@ function initClassEvents() {
         const row = target.closest('tr');
         const classId = row.cells[0].textContent;
         const className = row.cells[1].textContent;
-        const headTeacher = row.cells[2].textContent;
+        const headTeacher = row.cells[2].textContent; // 班主任姓名
         const number = row.cells[3].textContent;
+        // 关键：从表格行的data属性获取班主任ID（需确保renderClasses时添加data-id）
+        const headTeacherId = row.dataset.headTeacherId || '';
 
         if (target.classList.contains('fa-pencil') || target.textContent.includes('编辑')) {
-            editClass(classId, className, headTeacher, number);
+            // 传递headTeacherId到编辑函数
+            editClass(classId, className, headTeacher, number, headTeacherId);
         } else if (target.classList.contains('fa-trash') || target.textContent.includes('删除')) {
-            // 调用共用删除函数（传递类型、ID、名称）
             window.confirmDelete('class', classId, className);
         }
     });
@@ -106,7 +114,7 @@ function loadClasses() {
         });
 }
 
-// 渲染班级表格（处理空值显示）
+// 渲染班级表格（添加data-headTeacherId存储ID）
 function renderClasses(classes) {
     const classesBody = document.getElementById('classesBody');
     classesBody.innerHTML = '';
@@ -125,6 +133,8 @@ function renderClasses(classes) {
 
     classes.forEach(classInfo => {
         const row = document.createElement('tr');
+        // 关键：添加data-headTeacherId存储班主任ID
+        row.dataset.headTeacherId = classInfo.headTeacherId || '';
         row.className = 'hover:bg-gray-50 transition-colors duration-150';
         row.innerHTML = `
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${classInfo.id}</td>
@@ -165,74 +175,91 @@ function filterClasses() {
     renderClasses(filteredClasses);
 }
 
-// 添加班级（允许班主任和人数为空）
-function addClass() {
-    const id = document.getElementById('classId').value.trim();
-    const name = document.getElementById('className').value.trim();
-    const headTeacher = document.getElementById('headTeacher').value.trim();
-    const classNumberInput = document.getElementById('classNumber').value.trim();
-    const studentCount = classNumberInput ? parseInt(classNumberInput) : null;
 
-    // 前端校验：仅校验必填项
-    if (!id || !name) {
-        window.showNotification('error', '错误', '班级ID和名称不能为空');
-        return;
+
+// 编辑班级（完善班主任数据回显）
+function editClass(classId, className, headTeacherName, number, headTeacherId) {
+    // 1. 填充班级基础信息
+    document.getElementById('editClassIdDisplay').value = classId; // 显示ID（只读）
+    document.getElementById('editClassId').value = classId; // 隐藏ID（提交用）
+    document.getElementById('editClassName').value = className; // 班级名称
+    document.getElementById('editClassNumber').value = number || ''; // 班级人数
+
+    // 2. 填充班主任信息（关键：匹配教师ID）
+    const editHeadTeacherInput = document.getElementById('editHeadTeacher'); // 编辑姓名输入框
+    const editHeadTeacherIdInput = document.getElementById('editHeadTeacherId'); // 编辑隐藏ID
+
+    // 若班级已有班主任，匹配教师数据并填充
+    if (headTeacherName && teachers.length > 0) {
+        const matchedTeacher = teachers.find(teacher =>
+            teacher.name === headTeacherName || teacher.id === headTeacherId
+        );
+        if (matchedTeacher) {
+            editHeadTeacherInput.value = matchedTeacher.name; // 显示姓名
+            editHeadTeacherIdInput.value = matchedTeacher.id; // 存储ID（用于提交）
+        } else {
+            // 若教师数据中无匹配（如教师已删除），显示原姓名但清空ID
+            editHeadTeacherInput.value = headTeacherName;
+            editHeadTeacherIdInput.value = '';
+        }
+    } else {
+        // 无班主任时清空
+        editHeadTeacherInput.value = '';
+        editHeadTeacherIdInput.value = '';
     }
 
-    fetch('/api/classes', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({id, name, headTeacher, studentCount})
-    })
-        .then(response => {
-            if (!response.ok) throw new Error('添加失败，可能ID已存在');
-            return response.json();
-        })
-        .then(data => {
-            window.showNotification('success', '成功', '班级添加成功');
-            originalClasses.push(data);
-            renderClasses(originalClasses);
-            document.getElementById('addClassModal').classList.add('hidden');
-
-            // 调用更新所有班级学生数量的接口
-            updateAllClassStudentCounts();
-        })
-        .catch(error => {
-            window.showNotification('error', '失败', error.message);
-        });
-}
-
-// 编辑班级（允许班主任和人数为空）
-function editClass(id, name, headTeacher, number) {
-    // 显示班级ID（只读）
-    document.getElementById('editClassIdDisplay').value = id;
-    // 隐藏字段用于提交（保持ID不变）
-    document.getElementById('editClassId').value = id;
-    // 其他字段正常回显
-    document.getElementById('editClassName').value = name;
-    document.getElementById('editHeadTeacher').value = headTeacher;
-    document.getElementById('editClassNumber').value = number || '';
+    // 3. 显示编辑模态框
     document.getElementById('editClassModal').classList.remove('hidden');
 }
 
-// 更新班级（允许班主任和人数为空）
+// 更新班级（支持手动输入有效教师姓名）
 function updateClass() {
     const id = document.getElementById('editClassId').value;
     const name = document.getElementById('editClassName').value.trim();
-    const headTeacher = document.getElementById('editHeadTeacher').value.trim();
+    const headTeacherInput = document.getElementById('editHeadTeacher'); // 编辑页教师输入框
+    let headTeacherName = headTeacherInput.value.trim();
+    const headTeacherIdInput = document.getElementById('editHeadTeacherId'); // 编辑页隐藏ID
+    let headTeacherId = headTeacherIdInput.value.trim();
     const classNumberInput = document.getElementById('editClassNumber').value.trim();
     const studentCount = classNumberInput ? parseInt(classNumberInput) : null;
 
-    // 仅校验班级名称必填
+    // 前端校验：1. 班级名称必填
     if (!name) {
         window.showNotification('error', '错误', '班级名称不能为空');
         return;
     }
 
+    // 前端校验：2. 教师姓名非空时，自动匹配数据库教师
+    if (headTeacherName) {
+        const matchedTeacher = matchTeacherByInput(headTeacherName);
+        if (matchedTeacher) {
+            // 匹配成功：补全ID和标准姓名
+            headTeacherId = matchedTeacher.id;
+            headTeacherName = matchedTeacher.name;
+            headTeacherInput.value = matchedTeacher.name;
+            headTeacherIdInput.value = matchedTeacher.id;
+        } else {
+            // 匹配失败：提示错误
+            window.showNotification('error', '错误', '输入的班主任姓名/ID不存在，请重新输入或从下拉框选择');
+            headTeacherInput.focus();
+            return;
+        }
+    } else {
+        // 教师姓名为空：清空ID（允许取消设置班主任）
+        headTeacherId = '';
+    }
+
+    // 提交到后端
     fetch(`/api/classes/${id}`, {
         method: 'PUT',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({id, name, headTeacher, studentCount})
+        body: JSON.stringify({
+            id,
+            name,
+            headTeacher: headTeacherName || '未设置',
+            headTeacherId: headTeacherId,
+            studentCount
+        })
     })
         .then(response => {
             if (!response.ok) throw new Error('更新失败');
@@ -244,8 +271,6 @@ function updateClass() {
             if (index !== -1) originalClasses[index] = data;
             renderClasses(originalClasses);
             document.getElementById('editClassModal').classList.add('hidden');
-
-            // 调用更新所有班级学生数量的接口
             updateAllClassStudentCounts();
         })
         .catch(error => {
@@ -304,4 +329,214 @@ function updateAllClassStudentCounts() {
             console.error('更新所有班级人数失败:', error);
             window.showNotification('error', '失败', '更新所有班级人数失败');
         });
+}
+
+// 全局存储教师列表（与教师管理模块共享时，可改为window.teachers）
+let teachers = [];
+
+
+
+// 初始化教师下拉框（通用版：支持新增/编辑模态框）
+function initTeacherDropdown(inputId, dropdownId, hiddenId) {
+    const headTeacherInput = document.getElementById(inputId); // 显示姓名的输入框
+    const teacherDropdown = document.getElementById(dropdownId); // 下拉选项框
+    const headTeacherIdInput = document.getElementById(hiddenId); // 存储教师ID的隐藏框
+
+    // 1. 输入框点击：强制显示下拉（无论是否有值）
+    headTeacherInput.addEventListener('click', (e) => {
+        e.stopPropagation(); // 阻止冒泡（避免触发外部关闭）
+        const currentValue = headTeacherInput.value.trim().toLowerCase();
+        filterAndShowTeachers(currentValue, inputId, dropdownId, hiddenId); // 传参区分实例
+    });
+
+    // 2. 输入框变化：实时筛选+清空已选ID
+    headTeacherInput.addEventListener('input', (e) => {
+        const searchTerm = e.target.value.trim().toLowerCase();
+        headTeacherIdInput.value = ''; // 输入变化视为重新选择
+        filterAndShowTeachers(searchTerm, inputId, dropdownId, hiddenId);
+    });
+
+    // 3. 外部点击：关闭下拉（仅当点击区域不是输入框/下拉框时）
+    document.addEventListener('click', (e) => {
+        const isClickInside = headTeacherInput.contains(e.target) || teacherDropdown.contains(e.target);
+        if (!isClickInside) {
+            teacherDropdown.classList.add('hidden');
+        }
+    });
+
+    // 4. 选择下拉项：更新输入框+隐藏ID
+    teacherDropdown.addEventListener('click', (e) => {
+        const teacherItem = e.target.closest('.teacher-item');
+        if (teacherItem) {
+            const teacherId = teacherItem.dataset.id;
+            const teacherName = teacherItem.dataset.name;
+            headTeacherInput.value = teacherName;
+            headTeacherIdInput.value = teacherId;
+            teacherDropdown.classList.add('hidden'); // 选择后关闭下拉
+        }
+    });
+
+    // 5. 输入框获焦：显示下拉（增强交互）
+    headTeacherInput.addEventListener('focus', () => {
+        const currentValue = headTeacherInput.value.trim().toLowerCase();
+        filterAndShowTeachers(currentValue, inputId, dropdownId, hiddenId);
+    });
+}
+
+// 从数据库加载教师列表（后端接口需返回 [{id: 't001', name: '张三'}, ...]）
+function loadTeachers() {
+    fetch('/api/teachers')
+        .then(response => {
+            if (!response.ok) throw new Error(`HTTP错误: ${response.status}`);
+            return response.json();
+        })
+        .then(data => {
+            teachers = data; // 存储教师数据
+            // 加载完成后，若输入框有值，可触发一次筛选（可选）
+            const currentValue = document.getElementById('headTeacher').value.trim().toLowerCase();
+            if (currentValue) {
+                filterAndShowTeachers(currentValue);
+            }
+        })
+        .catch(error => {
+            console.error('加载教师失败:', error);
+            window.showNotification('error', '错误', '教师列表加载失败，请刷新页面');
+        });
+}
+
+// 筛选教师并显示下拉框（通用版：支持新增/编辑实例）
+function filterAndShowTeachers(searchTerm, inputId, dropdownId, hiddenId) {
+    const teacherDropdown = document.getElementById(dropdownId);
+    const headTeacherIdInput = document.getElementById(hiddenId); // 当前实例的隐藏ID
+    teacherDropdown.innerHTML = ''; // 清空旧选项
+
+    // 情况1：教师数据未加载
+    if (teachers.length === 0) {
+        teacherDropdown.innerHTML = `
+            <div class="px-4 py-2 text-gray-500 text-sm">
+                <i class="fa fa-spinner fa-spin mr-2"></i>加载中...
+            </div>
+        `;
+        teacherDropdown.classList.remove('hidden');
+        return;
+    }
+
+    // 情况2：筛选教师（支持姓名/ID模糊匹配）
+    const filteredTeachers = searchTerm
+        ? teachers.filter(teacher =>
+            teacher.name.toLowerCase().includes(searchTerm) ||
+            teacher.id.toLowerCase().includes(searchTerm)
+        )
+        : teachers.slice(0, 10); // 无搜索词时显示前10条（避免下拉过长）
+
+    // 情况3：无匹配结果
+    if (filteredTeachers.length === 0) {
+        teacherDropdown.innerHTML = `
+            <div class="px-4 py-2 text-gray-500 text-sm">
+                未找到匹配的教师
+            </div>
+        `;
+        teacherDropdown.classList.remove('hidden');
+        return;
+    }
+
+    // 情况4：生成下拉选项（高亮已选中的教师）
+    filteredTeachers.forEach(teacher => {
+        const item = document.createElement('div');
+        // 若当前教师ID与隐藏框ID一致，添加高亮样式
+        const isSelected = headTeacherIdInput.value === teacher.id;
+        item.className = `teacher-item px-4 py-2 hover:bg-gray-100 cursor-pointer transition-colors ${
+            isSelected ? 'bg-indigo-50 text-indigo-600' : ''
+        }`;
+        item.dataset.id = teacher.id;
+        item.dataset.name = teacher.name;
+        item.innerHTML = `
+            <div class="font-medium">${teacher.name}</div>
+            <div class="text-xs text-gray-500">教师ID: ${teacher.id}</div>
+        `;
+        teacherDropdown.appendChild(item);
+    });
+
+    // 强制显示下拉框
+    teacherDropdown.classList.remove('hidden');
+}
+
+// 添加班级（支持手动输入有效教师姓名）
+function addClass() {
+    const classId = document.getElementById('classId').value.trim();
+    const className = document.getElementById('className').value.trim();
+    const headTeacherInput = document.getElementById('headTeacher'); // 教师姓名输入框
+    let headTeacherName = headTeacherInput.value.trim();
+    const headTeacherIdInput = document.getElementById('headTeacherId'); // 隐藏ID字段
+    let headTeacherId = headTeacherIdInput.value.trim();
+    const classNumberInput = document.getElementById('classNumber').value.trim();
+    const studentCount = classNumberInput ? parseInt(classNumberInput) : null;
+
+    // 前端校验：1. 班级ID和名称必填
+    if (!classId || !className) {
+        window.showNotification('error', '错误', '班级ID和名称不能为空');
+        return;
+    }
+
+    // 前端校验：2. 教师姓名非空时，自动匹配数据库教师
+    if (headTeacherName) {
+        const matchedTeacher = matchTeacherByInput(headTeacherName);
+        if (matchedTeacher) {
+            // 匹配成功：自动补全ID和标准姓名（避免输入错别字）
+            headTeacherId = matchedTeacher.id;
+            headTeacherName = matchedTeacher.name; // 统一姓名格式（如消除空格）
+            headTeacherInput.value = matchedTeacher.name; // 同步更新输入框显示
+            headTeacherIdInput.value = matchedTeacher.id; // 同步更新隐藏ID
+        } else {
+            // 匹配失败：提示用户姓名不存在
+            window.showNotification('error', '错误', '输入的班主任姓名/ID不存在，请重新输入或从下拉框选择');
+            headTeacherInput.focus(); // 聚焦到输入框，方便修改
+            return;
+        }
+    } else {
+        // 教师姓名为空：清空ID（允许不设置班主任）
+        headTeacherId = '';
+    }
+
+    // 提交到后端（包含自动匹配的headTeacherId）
+    fetch('/api/classes', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            id: classId,
+            name: className,
+            headTeacherId: headTeacherId, // 自动匹配或下拉选择的ID
+            headTeacher: headTeacherName || '未设置', // 姓名（为空时显示“未设置”）
+            studentCount: studentCount
+        })
+    })
+        .then(response => {
+            if (!response.ok) throw new Error('添加失败，可能班级ID已存在');
+            return response.json();
+        })
+        .then(data => {
+            window.showNotification('success', '成功', '班级添加成功');
+            originalClasses.push(data);
+            renderClasses(originalClasses);
+            // 重置表单
+            document.getElementById('addClassForm').reset();
+            headTeacherIdInput.value = '';
+            document.getElementById('addClassModal').classList.add('hidden');
+            updateAllClassStudentCounts();
+        })
+        .catch(error => {
+            window.showNotification('error', '失败', error.message);
+        });
+}
+// 工具函数：根据输入内容（姓名/ID）匹配数据库中的教师
+function matchTeacherByInput(inputValue) {
+    if (!inputValue || teachers.length === 0) return null; // 无输入或教师数据未加载
+    const trimmedValue = inputValue.trim().toLowerCase();
+
+    // 优先精确匹配（避免重名问题，若需模糊匹配可改为includes）
+    const matchedTeacher = teachers.find(teacher =>
+        teacher.name.toLowerCase() === trimmedValue || // 姓名精确匹配
+        teacher.id.toLowerCase() === trimmedValue      // ID精确匹配
+    );
+    return matchedTeacher;
 }

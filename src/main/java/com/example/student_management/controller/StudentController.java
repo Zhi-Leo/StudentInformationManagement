@@ -3,6 +3,8 @@ package com.example.student_management.controller;
 import com.example.student_management.entity.Student;
 import com.example.student_management.service.ClassInfoService;
 import com.example.student_management.service.StudentService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,64 +12,97 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@RestController // 声明为 RESTful 控制器
-@RequestMapping("/api/students") // 基础路径
-@CrossOrigin(origins = "*") // 允许所有域名的跨域请求
+@RestController
+@RequestMapping("/api/students")
+@CrossOrigin(origins = "*")
 public class StudentController {
+    private static final Logger logger = LoggerFactory.getLogger(StudentController.class); // 新增日志，便于排查问题
+
     @Autowired
     private StudentService studentService;
     @Autowired
     private ClassInfoService classInfoService;
 
-    // 获取所有学生
+    // 获取所有学生（不变）
     @GetMapping
     public List<Student> getAllStudents() {
         return studentService.getAllStudents();
     }
 
-    // 根据 ID 获取学生
+    // 根据 ID 获取学生（不变）
     @GetMapping("/{id}")
     public ResponseEntity<Student> getStudentById(@PathVariable String id) {
         Student student = studentService.getStudentById(id);
         if (student != null) {
             return new ResponseEntity<>(student, HttpStatus.OK);
         } else {
+            logger.warn("查询学生失败：ID={} 不存在", id);
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
 
-    // 添加学生
+    // 添加学生（优化：补充classId判空）
     @PostMapping
     public ResponseEntity<Student> addStudent(@RequestBody Student student) {
         Student savedStudent = studentService.addStudent(student);
-        // 调用更新班级学生数量的方法
-        classInfoService.updateClassStudentCount(savedStudent.getClas());
+        // 仅当班级ID非空时，才更新班级人数
+        if (savedStudent.getClas() != null && !savedStudent.getClas().trim().isEmpty()) {
+            classInfoService.updateClassStudentCount(savedStudent.getClas());
+        } else {
+            logger.warn("新增学生未分配班级，跳过班级人数更新：学生ID={}", savedStudent.getId());
+        }
         return new ResponseEntity<>(savedStudent, HttpStatus.CREATED);
     }
 
-    // 更新学生
+    // 更新学生（优化：补充classId判空+旧班级人数回滚）
     @PutMapping("/{id}")
     public ResponseEntity<Student> updateStudent(@PathVariable String id, @RequestBody Student student) {
-        student.setId(id); // 确保 ID 一致
+        student.setId(id);
+        // 1. 查询旧学生信息（用于更新旧班级的人数）
+        Student oldStudent = studentService.getStudentById(id);
         Student updatedStudent = studentService.updateStudent(student);
+
         if (updatedStudent != null) {
-            // 调用更新班级学生数量的方法
-            classInfoService.updateClassStudentCount(updatedStudent.getClas());
+            // 2. 若学生班级有变更，先更新旧班级的人数
+            if (oldStudent != null && oldStudent.getClas() != null && !oldStudent.getClas().trim().isEmpty()) {
+                classInfoService.updateClassStudentCount(oldStudent.getClas());
+            }
+            // 3. 再更新新班级的人数（判空处理）
+            if (updatedStudent.getClas() != null && !updatedStudent.getClas().trim().isEmpty()) {
+                classInfoService.updateClassStudentCount(updatedStudent.getClas());
+            } else {
+                logger.warn("更新后学生未分配班级，跳过新班级人数更新：学生ID={}", updatedStudent.getId());
+            }
             return new ResponseEntity<>(updatedStudent, HttpStatus.OK);
         } else {
+            logger.warn("更新学生失败：ID={} 不存在", id);
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
 
-    // 删除学生
+    // 删除学生（核心修复：调整顺序+classId判空）
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteStudent(@PathVariable String id) {
+        // 1. 先查询学生（确认存在）
         Student student = studentService.getStudentById(id);
-        if (student != null) {
-            // 调用更新班级学生数量的方法
-            classInfoService.updateClassStudentCount(student.getClas());
+        if (student == null) {
+            logger.warn("删除学生失败：ID={} 不存在", id);
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
+
+        // 2. 先删除学生（关键：删除后再更新人数，确保统计准确）
         studentService.deleteStudent(id);
+        logger.info("删除学生成功：ID={}，姓名={}", id, student.getName());
+
+        // 3. 仅当班级ID非空时，更新班级人数（避免空ID报错）
+        String classId = student.getClas();
+        if (classId != null && !classId.trim().isEmpty()) {
+            classInfoService.updateClassStudentCount(classId);
+            logger.info("更新班级人数：班级ID={}，学生ID={}", classId, id);
+        } else {
+            logger.warn("删除的学生未分配班级，跳过班级人数更新：学生ID={}", id);
+        }
+
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }
