@@ -70,21 +70,22 @@ function initClassDropdown(inputId, dropdownId) {
             classDropdown.classList.add('hidden');
         }
     });
-
-    // 获焦时显示下拉框
-    classInput.addEventListener('focus', () => {
-        const currentVal = classInput.value.trim().toLowerCase();
-        filterAndShowClasses(currentVal, dropdownId);
-    });
 }
 
 // 3. 筛选班级并显示（按名称匹配）- 修复：增加 inputId 参数
-function filterAndShowClasses(searchVal, inputId, dropdownId) { // 新增 inputId 参数
+function filterAndShowClasses(searchVal, inputId, dropdownId) {
+    // 第一步：先获取元素并判断是否存在（关键：提前拦截 null）
     const classDropdown = document.getElementById(dropdownId);
-    const classInput = document.getElementById(inputId); // 获取当前输入框
+    const classInput = document.getElementById(inputId);
+    if (!classDropdown || !classInput) {
+        console.error(`下拉框元素不存在：dropdownId=${dropdownId}，inputId=${inputId}`);
+        return; // 终止函数，避免后续操作 null
+    }
+
+    // 第二步：元素存在，再清空内容（此时不会报错）
     classDropdown.innerHTML = '';
 
-    // 班级数据未加载
+    // 后续逻辑（班级数据加载、筛选等，不变）
     if (originalClasses.length === 0) {
         classDropdown.innerHTML = `
             <div class="px-4 py-2 text-gray-500 text-sm">
@@ -154,19 +155,26 @@ function validateClassName(inputId) {
 }
 
 // 5. 加载导航栏（复用）
+// student.js 中的 loadNavbar 函数（修复后）
 function loadNavbar() {
-    fetch('index.html')
+    return fetch('index.html')
         .then(res => res.text())
         .then(html => {
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, 'text/html');
-            const tpl = doc.getElementById('navbarTpl'); // 仅取导航栏模板
+            const tpl = doc.getElementById('navbarTpl');
+
             if (tpl && document.getElementById('navbarContainer')) {
-                document.getElementById('navbarContainer').innerHTML = tpl.innerHTML;
-                initNavbar(); // 初始化导航栏事件（仅退出登录、选项卡切换）
+                // 关键：只提取模板内的 HTML，过滤所有 <script> 标签
+                const navbarHtml = tpl.innerHTML.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+                document.getElementById('navbarContainer').innerHTML = navbarHtml;
+                initNavbar(); // 仅初始化导航栏的点击事件（无 message 监听）
             }
         })
-        .catch(err => console.error('加载导航栏失败:', err));
+        .catch(err => {
+            console.error('加载导航栏失败:', err);
+            return Promise.resolve();
+        });
 }
 
 // 6. 初始化导航栏（复用）
