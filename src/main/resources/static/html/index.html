@@ -8,31 +8,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
     <!-- Tailwind 配置 -->
-    <style type="text/tailwindcss">
-
-        /* body {
-    background-image: url('../唯美少女 马尾辫4K动漫壁纸3840_2160_彼岸图网.jpg');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-} */
+    <style>
         @layer utilities {
-            /* .content-auto {
-                content-visibility: auto;
-            } */
-            .card-shadow {
-                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            }
-
-            /* 无缝循环滚动动画 */
-            .animate-ticker {
-                animation: ticker 10s linear infinite;
-            }
-
-            .animate-ticker-clone {
-                animation: ticker-clone 10s linear infinite;
-            }
-
             @keyframes ticker {
                 0% {
                     transform: translateX(0);
@@ -81,38 +58,6 @@
         </div>
     </div>
 </div>
-<!--&lt;!&ndash; 导航栏模板（仅作为内容容器，不直接显示） &ndash;&gt;-->
-<!--<template id="navbar-template">-->
-<!--    <nav class="bg-white/80 shadow-md backdrop-blur-sm fixed top-0 left-0 right-0 z-9999">-->
-<!--        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">-->
-<!--            <div class="flex justify-between h-16">-->
-<!--                <div class="flex items-center">-->
-<!--                    <button class="flex items-center focus:outline-none hover:text-primary transition-colors"-->
-<!--                            id="homeBtn">-->
-<!--                        <i class="fa fa-graduation-cap text-primary text-2xl mr-2"></i>-->
-<!--                        <span class="font-bold text-xl">学生教师管理系统</span>-->
-<!--                    </button>-->
-<!--                </div>-->
-<!--                <div class="flex items-center space-x-4">-->
-<!--                    <button class="px-4 py-2 text-primary font-medium border-b-2 border-primary" id="classesTab">-->
-<!--                        <i class="fa fa-building mr-1"></i> 班级管理-->
-<!--                    </button>-->
-<!--                    &lt;!&ndash; 学生管理：取消默认选中样式 &ndash;&gt;-->
-<!--                    <button class="px-4 py-2 text-gray-500 font-medium hover:text-gray-700" id="studentsTab">-->
-<!--                        <i class="fa fa-users mr-1"></i> 学生管理-->
-<!--                    </button>-->
-<!--                    <button class="px-4 py-2 text-gray-500 font-medium hover:text-gray-700" id="teachersTab">-->
-<!--                        <i class="fa fa-briefcase mr-1"></i> 教师管理-->
-<!--                    </button>-->
-<!--                    <button class="px-4 py-2 text-danger font-medium hover:text-danger/90" id="logoutBtn">-->
-<!--                        <i class="fa fa-sign-out mr-1"></i> 退出登录-->
-<!--                    </button>-->
-<!--                </div>-->
-<!--            </div>-->
-<!--        </div>-->
-<!--    </nav>-->
-<!--</template>-->
-
 
 <!-- 页脚模板（保留） -->
 <template id="footer-template">

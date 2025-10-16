@@ -4,12 +4,7 @@ let originalClasses = []; // 存储班级列表（仅用名称，无需ID）
 
 document.addEventListener('DOMContentLoaded', () => {
     // 第一步：登录状态校验（核心）
-    const isLoggedIn = localStorage.getItem('isLoggedIn');
-    if (!isLoggedIn || isLoggedIn !== 'true') {
-        alert('请先登录后再访问学生管理页面！');
-        window.location.href = 'login.html';
-        return;
-    }
+    login0("学生");
     initStudentEvents();
     // 并行加载学生和班级数据，初始化下拉框
     Promise.all([loadStudents(), loadClasses()]).then(() => {

@@ -5,12 +5,7 @@ let currentId = null;
 // DOM加载完成后初始化
 document.addEventListener('DOMContentLoaded', () => {
     // 第一步：先验证登录状态（未登录则跳转）
-    const isLoggedIn = localStorage.getItem('isLoggedIn');
-    if (!isLoggedIn || isLoggedIn !== 'true') {
-        alert('请先登录后再访问主页！');
-        window.location.href = 'login.html'; // 强制跳转到登录页
-        return; // 终止后续代码执行，避免页面继续加载
-    }
+    login0("");
 
     // 第二步：验证通过后，再执行原有初始化逻辑
     loadSharedComponents(); // 加载导航栏、页脚等
@@ -165,7 +160,6 @@ function initTabs() {
                 tab.classList.add('text-gray-500');
             }
         });
-        return; // 直接返回，不执行任何选中逻辑
     }
     // 其他页面正常判断选中状态
     else if (currentPath.includes('class')) {

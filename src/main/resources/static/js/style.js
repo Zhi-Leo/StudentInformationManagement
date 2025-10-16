@@ -22,6 +22,15 @@ let inactivityTimer = null; // 无操作计时器
 const INACTIVITY_TIMEOUT = 50 * 60 * 1000; // 5分钟（单位：毫秒）
 const WARN_BEFORE_LOGOUT = 30 * 1000; // 登出前30秒提示（可选，提升用户体验）
 
+
+function login0(login){
+    const isLoggedIn = localStorage.getItem('isLoggedIn');
+    if (!isLoggedIn || isLoggedIn !== 'true') {
+        alert('请先登录后再访问'+login+'管理页面！');
+        window.location.href = 'login.html';
+
+    }
+}
 /**
  * 初始化无操作自动登出
  */

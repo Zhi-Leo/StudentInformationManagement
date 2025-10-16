@@ -4,13 +4,9 @@ let originalClasses = []; // 新增：存储班级列表（供下拉框使用）
 
 document.addEventListener('DOMContentLoaded', () => {
     // 第一步：登录状态校验（核心）
-    const isLoggedIn = localStorage.getItem('isLoggedIn');
-    if (!isLoggedIn || isLoggedIn !== 'true') {
-        alert('请先登录后再访问教师管理页面！');
-        window.location.href = 'login.html';
-        return;
-    }
+    login0("教师");
     initTeacherEvents();
+    initAutoLogout()
     // 并行加载教师和班级数据
     Promise.all([loadTeachers(), loadClasses()]).then(() => {
         // 初始化班级下拉框（添加和编辑教师）
