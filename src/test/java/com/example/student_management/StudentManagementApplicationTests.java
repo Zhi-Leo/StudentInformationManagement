@@ -11,7 +11,3 @@ class StudentManagementApplicationTests {
     }
 
 }
-
-//public static void main(String[] args) {
-//	DriverManager de=DriverManage
-//}

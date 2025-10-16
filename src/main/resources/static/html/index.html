@@ -10,6 +10,19 @@
     <!-- Tailwind 配置 -->
     <style>
         @layer utilities {
+            .card-shadow {
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            }
+
+            /* 无缝循环滚动动画 */
+            .animate-ticker {
+                animation: ticker 10s linear infinite;
+            }
+
+            .animate-ticker-clone {
+                animation: ticker-clone 10s linear infinite;
+            }
+        @layer utilities {
             @keyframes ticker {
                 0% {
                     transform: translateX(0);
