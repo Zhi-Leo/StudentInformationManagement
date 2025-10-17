@@ -6,9 +6,8 @@ let originalClasses = [];
 document.addEventListener('DOMContentLoaded', () => {
     // 第一步：登录状态校验（核心）
     login0("班级");
-
-    // 2. 初始化自动登出（关键：登录通过后才启动）
-    // initAutoLogout();
+    // 登出
+    initAutoLogout();
 
     initClassEvents(); // 初始化班级基础事件
     loadClasses(); // 加载班级数据

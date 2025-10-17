@@ -6,6 +6,8 @@ let currentId = null;
 document.addEventListener('DOMContentLoaded', () => {
     // 第一步：先验证登录状态（未登录则跳转）
     login0("");
+    // 登出
+    initAutoLogout();
 
     // 第二步：验证通过后，再执行原有初始化逻辑
     loadSharedComponents(); // 加载导航栏、页脚等

@@ -1,22 +1,24 @@
 // 学生管理专用JS
 let originalStudents = [];
-let originalClasses = []; // 存储班级列表（仅用名称，无需ID）
+let originalClasses = []; // 存储班级列表（包含班级ID和名称等信息）
 
 document.addEventListener('DOMContentLoaded', () => {
-    // 第一步：登录状态校验（核心）
+    // 登录状态校验
     login0("学生");
     initStudentEvents();
+    // 登出
+    initAutoLogout();
     // 并行加载学生和班级数据，初始化下拉框
     Promise.all([loadStudents(), loadClasses()]).then(() => {
-        initClassDropdown('studentClas', 'classDropdown'); // 添加学生（无ID）
-        initClassDropdown('editStudentClas', 'editClassDropdown'); // 编辑学生（无ID）
+        initClassDropdown('studentClas', 'classDropdown'); // 添加学生的班级下拉
+        initClassDropdown('editStudentClas', 'editClassDropdown'); // 编辑学生的班级下拉
     });
     loadNavbar();
 });
 
-// 1. 加载班级数据（仅需班级名称，无需ID）
+// 加载班级数据（从后端获取所有班级，包含ID、名称、班主任等）
 function loadClasses() {
-    return fetch('/api/classes') // 后端返回格式需包含 "name" 字段（如：[{name: "高一(1)班", ...}]）
+    return fetch('/api/classes')
         .then(response => {
             if (!response.ok) throw new Error(`班级数据加载失败: ${response.status}`);
             return response.json();
@@ -32,55 +34,67 @@ function loadClasses() {
         });
 }
 
-// 2. 初始化班级下拉框（仅用班级名称）
+// 初始化班级下拉框通用逻辑
 function initClassDropdown(inputId, dropdownId) {
     const classInput = document.getElementById(inputId);
     const classDropdown = document.getElementById(dropdownId);
+    if (!classInput || !classDropdown) return;
 
-    // 1. 点击输入框显示下拉框 - 补充 inputId
+    // 点击输入框显示下拉框
     classInput.addEventListener('click', (e) => {
         e.stopPropagation();
         const currentVal = classInput.value.trim().toLowerCase();
-        filterAndShowClasses(currentVal, inputId, dropdownId); // 新增 inputId
+        filterAndShowClasses(currentVal, inputId, dropdownId);
     });
 
-    // 2. 输入时实时筛选 - 补充 inputId
+    // 输入时实时筛选班级
     classInput.addEventListener('input', (e) => {
         const searchVal = e.target.value.trim().toLowerCase();
-        filterAndShowClasses(searchVal, inputId, dropdownId); // 新增 inputId
+        filterAndShowClasses(searchVal, inputId, dropdownId);
     });
 
-    // 3. 获焦时显示下拉框 - 补充 inputId
-    classInput.addEventListener('focus', () => {
-        const currentVal = classInput.value.trim().toLowerCase();
-        filterAndShowClasses(currentVal, inputId, dropdownId); // 新增 inputId
-    });
+    // 初始化时如果班级数据为空，显示加载中
+    if (originalClasses.length === 0) {
+        classDropdown.innerHTML = `
+            <div class="px-4 py-2 text-gray-500 text-sm">
+                <i class="fa fa-spinner fa-spin mr-2"></i>班级数据加载中...
+            </div>
+        `;
+    }
 
-    // 选择下拉项：直接填入班级名称（无ID）
-    classDropdown.addEventListener('click', (e) => {
-        const classItem = e.target.closest('.class-item');
-        if (classItem) {
-            const className = classItem.dataset.name; // 仅获取班级名称
-            classInput.value = className; // 输入框显示名称
+    // 外部点击关闭下拉框
+    document.addEventListener('click', (e) => {
+        const isClickInside = classInput.contains(e.target) || classDropdown.contains(e.target);
+        if (!isClickInside) {
             classDropdown.classList.add('hidden');
         }
     });
+
+    // 选择下拉项：填充班级名称
+    classDropdown.addEventListener('click', (e) => {
+        const classItem = e.target.closest('.class-item');
+        if (classItem) {
+            const className = classItem.dataset.name;
+            classInput.value = className;
+            classDropdown.classList.add('hidden');
+        }
+    });
+
+    classInput.addEventListener('focus', () => {
+        const currentVal = classInput.value.trim().toLowerCase();
+        filterAndShowClasses(currentVal, inputId, dropdownId);
+        classInput.select();
+    });
 }
 
-// 3. 筛选班级并显示（按名称匹配）- 修复：增加 inputId 参数
+// 筛选班级并显示下拉选项（支持ID和名称搜索）
 function filterAndShowClasses(searchVal, inputId, dropdownId) {
-    // 第一步：先获取元素并判断是否存在（关键：提前拦截 null）
     const classDropdown = document.getElementById(dropdownId);
     const classInput = document.getElementById(inputId);
-    if (!classDropdown || !classInput) {
-        console.error(`下拉框元素不存在：dropdownId=${dropdownId}，inputId=${inputId}`);
-        return; // 终止函数，避免后续操作 null
-    }
+    if (!classInput) return;
 
-    // 第二步：元素存在，再清空内容（此时不会报错）
     classDropdown.innerHTML = '';
 
-    // 后续逻辑（班级数据加载、筛选等，不变）
     if (originalClasses.length === 0) {
         classDropdown.innerHTML = `
             <div class="px-4 py-2 text-gray-500 text-sm">
@@ -91,12 +105,14 @@ function filterAndShowClasses(searchVal, inputId, dropdownId) {
         return;
     }
 
-    // 按班级名称筛选（模糊匹配）
+    // 关键：同时匹配班级ID和名称（toLowerCase()忽略大小写）
     const filteredClasses = searchVal
-        ? originalClasses.filter(cls => cls.name.toLowerCase().includes(searchVal))
-        : originalClasses.slice(0, 10); // 无搜索时显示前10个
+        ? originalClasses.filter(cls =>
+            cls.id.toLowerCase().includes(searchVal) ||
+            cls.name.toLowerCase().includes(searchVal)
+        )
+        : originalClasses.slice(0, 10);
 
-    // 无匹配结果
     if (filteredClasses.length === 0) {
         classDropdown.innerHTML = `
             <div class="px-4 py-2 text-gray-500 text-sm">
@@ -107,17 +123,17 @@ function filterAndShowClasses(searchVal, inputId, dropdownId) {
         return;
     }
 
-    // 生成下拉选项（修复：使用 inputId 获取的输入框判断选中状态）
+    // 下拉项显示"ID - 名称"，方便用户识别
     filteredClasses.forEach(cls => {
         const item = document.createElement('div');
-        // 修复：通过 inputId 获取当前输入框的值，判断是否选中
-        const isSelected = classInput.value.trim() === cls.name;
+        const isSelected = classInput.value.trim() === cls.name || classInput.value.trim() === cls.id;
         item.className = `class-item px-4 py-2 hover:bg-gray-100 cursor-pointer transition-colors ${
             isSelected ? 'bg-indigo-50 text-indigo-600' : ''
         }`;
-        item.dataset.name = cls.name; // 仅存储名称
+        item.dataset.name = cls.name;
+        item.dataset.id = cls.id;
         item.innerHTML = `
-            <div class="font-medium">${cls.name}</div>
+            <div class="font-medium">${cls.id} - ${cls.name}</div>  
             <div class="text-xs text-gray-500">班主任：${cls.headTeacher || '未设置'}</div>
         `;
         classDropdown.appendChild(item);
@@ -126,22 +142,14 @@ function filterAndShowClasses(searchVal, inputId, dropdownId) {
     classDropdown.classList.remove('hidden');
 }
 
-// 4. 班级名称校验（确保是有效班级名称）
+// 班级校验逻辑（允许为空时的校验）
 function validateClassName(inputId) {
     const classInput = document.getElementById(inputId);
     const className = classInput.value.trim();
 
-    // 空校验
-    if (!className) {
-        window.showNotification('error', '错误', '班级不能为空，请选择或搜索班级');
-        classInput.focus();
-        return false;
-    }
-
-    // 有效性校验（是否存在于班级列表中）
-    const isClassValid = originalClasses.some(cls => cls.name === className);
-    if (!isClassValid) {
-        window.showNotification('error', '错误', '请选择下拉框中的有效班级名称');
+    // 允许为空，仅当有值时校验有效性
+    if (className && !originalClasses.some(cls => cls.name === className || cls.id === className)) {
+        window.showNotification('error', '错误', '请选择下拉框中的有效班级（ID或名称）');
         classInput.focus();
         return false;
     }
@@ -149,8 +157,7 @@ function validateClassName(inputId) {
     return true;
 }
 
-// 5. 加载导航栏（复用）
-// student.js 中的 loadNavbar 函数（修复后）
+// 加载导航栏
 function loadNavbar() {
     return fetch('index.html')
         .then(res => res.text())
@@ -160,10 +167,9 @@ function loadNavbar() {
             const tpl = doc.getElementById('navbarTpl');
 
             if (tpl && document.getElementById('navbarContainer')) {
-                // 关键：只提取模板内的 HTML，过滤所有 <script> 标签
                 const navbarHtml = tpl.innerHTML.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
                 document.getElementById('navbarContainer').innerHTML = navbarHtml;
-                initNavbar(); // 仅初始化导航栏的点击事件（无 message 监听）
+                initNavbar();
             }
         })
         .catch(err => {
@@ -172,14 +178,14 @@ function loadNavbar() {
         });
 }
 
-// 6. 初始化导航栏（复用）
+// 初始化导航栏
 function initNavbar() {
     const studentsTab = document.getElementById('studentsTab');
     if (studentsTab) {
         studentsTab.classList.add('text-primary', 'border-b-2', 'border-primary');
         studentsTab.classList.remove('text-gray-500');
     }
-    // 退出登录逻辑（仅清除状态，无校验）
+    // 退出登录逻辑
     document.getElementById('logoutBtn')?.addEventListener('click', () => {
         if (confirm('确定退出登录吗？')) {
             localStorage.removeItem('isLoggedIn');
@@ -188,13 +194,22 @@ function initNavbar() {
     });
 }
 
-// 7. 初始化事件监听（移除ID相关逻辑）
+// 初始化事件监听
 function initStudentEvents() {
     // 模态框控制（添加学生）
     document.getElementById('addStudentBtn')?.addEventListener('click', () => {
-        document.getElementById('addStudentModal').classList.remove('hidden');
+        const modal = document.getElementById('addStudentModal');
+        modal.classList.remove('hidden');
         document.getElementById('addStudentForm').reset();
-        // 移除：重置班级ID隐藏字段的代码
+
+        const focusInput = () => {
+            const classInput = document.getElementById('studentClas');
+            classInput.focus();
+            modal.removeEventListener('transitionend', focusInput);
+        };
+
+        modal.addEventListener('transitionend', focusInput);
+        setTimeout(focusInput, 300);
     });
     document.getElementById('closeStudentModal')?.addEventListener('click', () => {
         document.getElementById('addStudentModal').classList.add('hidden');
@@ -214,15 +229,15 @@ function initStudentEvents() {
         });
     }
 
-    // 表单提交（校验班级名称）
+    // 表单提交（校验班级选择）
     document.getElementById('addStudentForm')?.addEventListener('submit', (e) => {
         e.preventDefault();
-        if (!validateClassName('studentClas')) return; // 校验名称（无ID）
+        if (!validateClassName('studentClas')) return;
         addStudent();
     });
     document.getElementById('editStudentForm')?.addEventListener('submit', (e) => {
         e.preventDefault();
-        if (!validateClassName('editStudentClas')) return; // 校验名称（无ID）
+        if (!validateClassName('editStudentClas')) return;
         updateStudent();
     });
 
@@ -257,7 +272,7 @@ function initStudentEvents() {
     }
 }
 
-// 8. 编辑学生（仅回显班级名称）
+// 编辑学生（回显班级名称等信息）
 function editStudent(id) {
     const student = originalStudents.find(s => s.id === id);
     if (!student) {
@@ -271,11 +286,15 @@ function editStudent(id) {
     document.getElementById('editStudentSex').value = student.sex || '男';
     document.getElementById('editStudentGrade').value = student.grade || '';
 
-    // 回显班级名称（直接显示，无ID）
+    // 回显班级名称
     const classInput = document.getElementById('editStudentClas');
     if (classInput) {
-        classInput.value = student.clas || ''; // student.clas 已存储班级名称
+        classInput.value = student.clas || '';
     }
+
+    // 触发下拉框筛选，实现下拉显示
+    const event = new Event('input', { bubbles: true });
+    classInput.dispatchEvent(event);
 
     // 显示模态框
     const editModal = document.getElementById('editStudentModal');
@@ -284,10 +303,10 @@ function editStudent(id) {
     }
 }
 
-// 9. 新增学生（提交班级名称到数据库）
+// 新增学生
 function addStudent() {
     const id = document.getElementById('studentId').value.trim();
-    const clas = document.getElementById('studentClas').value.trim(); // 直接获取班级名称
+    const clas = document.getElementById('studentClas').value.trim();
     const name = document.getElementById('studentName').value.trim();
     const age = parseInt(document.getElementById('studentAge').value);
     const sex = document.getElementById('studentSex').value;
@@ -305,14 +324,18 @@ function addStudent() {
     submitBtn.disabled = true;
     submitBtn.textContent = '提交中...';
 
-    // 提交班级名称到后端（clas字段为名称，无ID）
     fetch('/api/students', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({id, clas, name, age, sex, grade}) // clas是班级名称
+        body: JSON.stringify({id, clas, name, age, sex, grade})
     })
         .then(response => {
-            if (!response.ok) throw new Error('添加失败，可能ID已存在');
+            if (response.status === 400) {
+                return response.text().then(errMsg => {
+                    throw new Error(errMsg || '添加失败，可能ID已存在');
+                });
+            }
+            if (!response.ok) throw new Error('添加失败，请重试');
             return response.json();
         })
         .then(data => {
@@ -331,10 +354,10 @@ function addStudent() {
         });
 }
 
-// 10. 更新学生（提交班级名称到数据库）
+// 更新学生
 function updateStudent() {
     const id = document.getElementById('editStudentId').value.trim();
-    const clas = document.getElementById('editStudentClas').value.trim(); // 直接获取班级名称
+    const clas = document.getElementById('editStudentClas').value.trim();
     const name = document.getElementById('editStudentName').value.trim();
     const age = parseInt(document.getElementById('editStudentAge').value);
     const sex = document.getElementById('editStudentSex').value;
@@ -352,14 +375,17 @@ function updateStudent() {
     submitBtn.disabled = true;
     submitBtn.textContent = '提交中...';
 
-    // 提交班级名称到后端（clas字段为名称，无ID）
     fetch(`/api/students/${id}`, {
         method: 'PUT',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({id, clas, name, age, sex, grade}) // clas是班级名称
+        body: JSON.stringify({id, clas, name, age, sex, grade})
     })
         .then(response => {
-            if (!response.ok) throw new Error('更新失败，请重试');
+            if (!response.ok) {
+                return response.text().then(errMsg => {
+                    throw new Error(errMsg || '更新失败，请重试');
+                });
+            }
             return response.json();
         })
         .then(data => {

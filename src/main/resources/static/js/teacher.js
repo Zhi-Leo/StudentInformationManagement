@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 第一步：登录状态校验（核心）
     login0("教师");
     initTeacherEvents();
-    initAutoLogout()
+    initAutoLogout();
     // 并行加载教师和班级数据
     Promise.all([loadTeachers(), loadClasses()]).then(() => {
         // 初始化班级下拉框（添加和编辑教师）

@@ -2,124 +2,164 @@ tailwind.config = {
     theme: {
         extend: {
             colors: {
-                primary: '#3B82F6',    // 蓝色（学生管理）
-                secondary: '#10B981',  // 绿色（教师管理）
-                danger: '#EF4444',     // 红色（删除/危险）
-                warning: '#F59E0B',    // 黄色（编辑）
-                info: '#6366F1'        // 靛蓝色（班级管理）
+                primary: '#3B82F6',
+                secondary: '#10B981',
+                danger: '#EF4444',
+                warning: '#F59E0B',
+                info: '#6366F1'
             },
             fontFamily: {
                 sans: ['Inter', 'system-ui', 'sans-serif'],
             },
         }
-
     }
-
 }
 
-// 自动登出相关全局变量
-let inactivityTimer = null; // 无操作计时器
-const INACTIVITY_TIMEOUT = 50 * 60 * 1000; // 5分钟（单位：毫秒）
-const WARN_BEFORE_LOGOUT = 30 * 1000; // 登出前30秒提示（可选，提升用户体验）
+// 自动登出全局变量（分开存储两个计时器，避免覆盖）
+let totalTimeoutTimer = null;     // 总超时计时器（10秒后登出）
+let countdownTriggerTimer = null; // 倒计时触发计时器（5秒后显示提示）
+let countdownTimer = null;        // 倒计时显示计时器
+let warningElement = null;        // 提示元素
+const INACTIVITY_TIMEOUT = 10 * 1000;    // 总超时10秒
+const WARN_BEFORE_LOGOUT = 5 * 1000;     // 提前5秒提示
 
 
-function login0(login){
+function login0(login) {
     const isLoggedIn = localStorage.getItem('isLoggedIn');
     if (!isLoggedIn || isLoggedIn !== 'true') {
-        alert('请先登录后再访问'+login+'管理页面！');
+        alert('请先登录后再访问' + login + '管理页面！');
         window.location.href = 'login.html';
-
     }
 }
+
 /**
- * 初始化无操作自动登出
+ * 初始化自动登出
  */
 function initAutoLogout() {
-    // 1. 启动计时器
-    resetInactivityTimer();
+    resetAllTimers(); // 初始启动计时
 
-    // 2. 监听用户交互事件（有操作则重置计时器）
-    const interactionEvents = [
-        'mousemove', 'keydown', 'click', 'scroll', 'touchstart',
-        'visibilitychange' // 监听页面是否在前台（避免后台运行误触发）
-    ];
-    interactionEvents.forEach(event => {
-        window.addEventListener(event, resetInactivityTimer);
-    });
+    // 监听所有用户交互（操作即重置）
+    ['mousemove', 'keydown', 'click', 'scroll', 'touchstart', 'visibilitychange']
+        .forEach(event => window.addEventListener(event, resetAllTimers));
 
-    // 3. 页面关闭/刷新前清除计时器（避免内存泄漏）
-    window.addEventListener('beforeunload', () => {
-        clearTimeout(inactivityTimer);
-    });
+    // 页面关闭前彻底清理
+    window.addEventListener('beforeunload', destroyAll);
 }
 
 /**
- * 重置无操作计时器
+ * 核心修复：用户操作时，完全重置所有计时器（总超时重新从10秒开始）
  */
-function resetInactivityTimer() {
-    // 清除现有计时器
-    if (inactivityTimer) {
-        clearTimeout(inactivityTimer);
-    }
+function resetAllTimers() {
+    // 1. 立即销毁所有旧计时器和提示
+    destroyAll();
 
-    // 页面在后台时，暂停计时（可选）
-    if (document.hidden) {
-        return;
-    }
+    // 2. 页面在后台不计时
+    if (document.hidden) return;
 
-    // 启动新计时器：先提示，再登出
-    inactivityTimer = setTimeout(() => {
-        // 登出前30秒提示用户
-        const confirmExtend = confirm(
-            '您已5分钟未操作，即将自动登出。\n点击"确定"继续会话，"取消"立即登出。'
-        );
-        if (confirmExtend) {
-            // 用户选择续期：重置计时器
-            resetInactivityTimer();
-            // （可选）调用后端接口刷新Token有效期（需后端配合）
-            refreshToken();
-        } else {
-            // 立即登出
-            forceLogout('无操作超时，已自动登出');
-        }
-    }, INACTIVITY_TIMEOUT - WARN_BEFORE_LOGOUT); // 提前30秒提示
+    // 3. 重新设置总超时计时器（10秒后登出，用户操作后从0开始算10秒）
+    totalTimeoutTimer = setTimeout(() => {
+        forceLogout('无操作超时，已自动登出');
+    }, INACTIVITY_TIMEOUT);
+
+    // 4. 重新设置倒计时触发计时器（5秒后显示提示，基于新的总超时）
+    countdownTriggerTimer = setTimeout(() => {
+        createCountdown();
+    }, INACTIVITY_TIMEOUT - WARN_BEFORE_LOGOUT);
 }
 
 /**
- * 强制登出（清除状态+跳转，全局复用）
- * @param {string} msg - 登出提示信息
+ * 创建倒计时提示（从5秒递减）
+ */
+function createCountdown() {
+    // 确保没有旧提示
+    if (warningElement) destroyAll();
+
+    // 创建提示元素（带唯一ID）
+    warningElement = document.createElement('div');
+    warningElement.id = 'auto-logout-warning';
+    warningElement.className = 'fixed top-4 right-4 bg-warning text-white px-4 py-2 rounded shadow-lg z-50';
+    document.body.appendChild(warningElement);
+
+    // 倒计时初始值（5秒）
+    let remainingSeconds = WARN_BEFORE_LOGOUT / 1000; // 5
+
+    // 立即更新一次显示
+    updateCountdownText(remainingSeconds);
+
+    // 每秒更新倒计时
+    countdownTimer = setInterval(() => {
+        remainingSeconds--;
+        updateCountdownText(remainingSeconds);
+
+        // 倒计时结束（0秒），清除计时器
+        if (remainingSeconds <= 0) {
+            clearInterval(countdownTimer);
+        }
+    }, 1000);
+}
+
+/**
+ * 更新倒计时文本
+ */
+function updateCountdownText(remaining) {
+    // 确保元素存在
+    if (!warningElement || !document.body.contains(warningElement)) return;
+
+    // 显示当前剩余秒数
+    warningElement.innerHTML = `
+        <div class="flex items-center">
+            <i class="fa fa-exclamation-circle mr-2"></i>
+            <span>${remaining} 秒后自动登出...</span>
+        </div>
+    `;
+}
+
+/**
+ * 销毁所有计时器和提示（确保总超时计时器也被清除）
+ */
+function destroyAll() {
+    // 清除总超时计时器（关键：用户操作后必须清除旧的总计时）
+    if (totalTimeoutTimer) {
+        clearTimeout(totalTimeoutTimer);
+        totalTimeoutTimer = null;
+    }
+    // 清除倒计时触发计时器
+    if (countdownTriggerTimer) {
+        clearTimeout(countdownTriggerTimer);
+        countdownTriggerTimer = null;
+    }
+    // 清除倒计时显示计时器
+    if (countdownTimer) {
+        clearInterval(countdownTimer);
+        countdownTimer = null;
+    }
+
+    // 删除提示元素
+    const oldWarning = document.getElementById('auto-logout-warning');
+    if (oldWarning && document.body.contains(oldWarning)) {
+        document.body.removeChild(oldWarning);
+    }
+    warningElement = null;
+}
+
+/**
+ * 强制登出
  */
 function forceLogout(msg = '已退出登录') {
-    // 1. 清除登录状态
+    destroyAll();
     localStorage.removeItem('isLoggedIn');
-    localStorage.removeItem('userToken'); // 若后续用Token，需添加这行
-    // 2. 清除计时器
-    if (inactivityTimer) {
-        clearTimeout(inactivityTimer);
-    }
-    // 3. 提示并跳转
-    // alert(msg);
+    localStorage.removeItem('userToken');
     window.location.href = 'login.html';
 }
 
 /**
- * （可选）刷新Token有效期（需后端配合）
- * 作用：用户续期时，同步延长后端Token的有效期
+ * 刷新Token
  */
 function refreshToken() {
     const token = localStorage.getItem('userToken');
     if (!token) return;
-
     fetch('/api/refresh-token', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-        }
-    }).catch(error => {
-        console.error('Token刷新失败:', error);
-        // 刷新失败，直接登出
-        forceLogout('会话已过期，请重新登录');
-    });
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }
+    }).catch(() => forceLogout('会话已过期，请重新登录'));
 }
-
