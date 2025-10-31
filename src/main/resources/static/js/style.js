@@ -20,8 +20,8 @@ let totalTimeoutTimer = null;     // 总超时计时器（10秒后登出）
 let countdownTriggerTimer = null; // 倒计时触发计时器（5秒后显示提示）
 let countdownTimer = null;        // 倒计时显示计时器
 let warningElement = null;        // 提示元素
-const INACTIVITY_TIMEOUT = 10 * 1000;    // 总超时10秒
-const WARN_BEFORE_LOGOUT = 5 * 1000;     // 提前5秒提示
+const INACTIVITY_TIMEOUT = 5 * 60 * 1000;    // 总超时10秒
+const WARN_BEFORE_LOGOUT = 30 * 1000;     // 提前5秒提示
 
 
 function login0(login) {
@@ -99,7 +99,7 @@ function createCountdown() {
 }
 
 /**
- * 更新倒计时文本
+ * 更新倒计时文本1
  */
 function updateCountdownText(remaining) {
     // 确保元素存在
