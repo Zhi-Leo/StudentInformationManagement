@@ -33,61 +33,7 @@ function loadClasses() {
         });
 }
 
-// 新增：初始化班级下拉框（通用逻辑）
-function initClassDropdown(inputId, dropdownId) {
-    const classInput = document.getElementById(inputId);
-    const classDropdown = document.getElementById(dropdownId);
-    if (!classInput || !classDropdown) return; // 防止DOM元素不存在
 
-    // 点击输入框显示下拉框
-    classInput.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const classDropdown = document.getElementById(dropdownId);
-        if (!classDropdown.classList.contains('hidden')) return; // 已显示则不重复渲染
-        const currentVal = classInput.value.trim().toLowerCase();
-        filterAndShowClasses(currentVal, inputId, dropdownId);
-    });
-
-    // 输入时实时筛选班级
-    classInput.addEventListener('input', (e) => {
-        const searchVal = e.target.value.trim().toLowerCase();
-        filterAndShowClasses(searchVal, inputId, dropdownId);
-    });
-
-    // 初始化时如果班级数据为空，显示加载中
-    if (originalClasses.length === 0) {
-        classDropdown.innerHTML = `
-            <div class="px-4 py-2 text-gray-500 text-sm">
-                <i class="fa fa-spinner fa-spin mr-2"></i>班级数据加载中...
-            </div>
-        `;
-    }
-
-    // 外部点击关闭下拉框
-    document.addEventListener('click', (e) => {
-        const isClickInside = classInput.contains(e.target) || classDropdown.contains(e.target);
-        if (!isClickInside) {
-            classDropdown.classList.add('hidden');
-        }
-    });
-
-    // 选择下拉项：填充班级名称
-    classDropdown.addEventListener('click', (e) => {
-        const classItem = e.target.closest('.class-item');
-        if (classItem) {
-            const className = classItem.dataset.name;
-            classInput.value = className; // 输入框显示班级名称
-            classDropdown.classList.add('hidden');
-        }
-    });
-
-    classInput.addEventListener('focus', () => {
-        const currentVal = classInput.value.trim().toLowerCase();
-        filterAndShowClasses(currentVal, inputId, dropdownId);
-        // 新增：主动触发输入框的聚焦状态（确保光标显示）
-        classInput.select(); // 可选：选中现有内容，增强交互
-    });
-}
 
 // 新增：筛选班级并显示下拉选项
 // 1. 修改班级筛选逻辑（支持ID和名称搜索）

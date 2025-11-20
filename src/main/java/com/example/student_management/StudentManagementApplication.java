@@ -12,6 +12,13 @@ public class StudentManagementApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(StudentManagementApplication.class, args);
+        System.out.println("(♥◠‿◠)ﾉﾞ  学生信息管理系统启动成功   ლ(´ڡ`ლ)ﾞ  \n" +
+                "_      ______  ____    \n"+
+                "| |    |  ____|/ __ \\    \n"+
+                "| |    | |__  | |  | |     \n"+
+                "| |    |  __| | |  | |     \n"+
+                "| |___ | |____| |__| |     \n"+
+                "|_____||______|\\____/    \n");
     }
 
     @Bean

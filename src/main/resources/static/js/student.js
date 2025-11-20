@@ -34,58 +34,6 @@ function loadClasses() {
         });
 }
 
-// 初始化班级下拉框通用逻辑
-function initClassDropdown(inputId, dropdownId) {
-    const classInput = document.getElementById(inputId);
-    const classDropdown = document.getElementById(dropdownId);
-    if (!classInput || !classDropdown) return;
-
-    // 点击输入框显示下拉框
-    classInput.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const currentVal = classInput.value.trim().toLowerCase();
-        filterAndShowClasses(currentVal, inputId, dropdownId);
-    });
-
-    // 输入时实时筛选班级
-    classInput.addEventListener('input', (e) => {
-        const searchVal = e.target.value.trim().toLowerCase();
-        filterAndShowClasses(searchVal, inputId, dropdownId);
-    });
-
-    // 初始化时如果班级数据为空，显示加载中
-    if (originalClasses.length === 0) {
-        classDropdown.innerHTML = `
-            <div class="px-4 py-2 text-gray-500 text-sm">
-                <i class="fa fa-spinner fa-spin mr-2"></i>班级数据加载中...
-            </div>
-        `;
-    }
-
-    // 外部点击关闭下拉框
-    document.addEventListener('click', (e) => {
-        const isClickInside = classInput.contains(e.target) || classDropdown.contains(e.target);
-        if (!isClickInside) {
-            classDropdown.classList.add('hidden');
-        }
-    });
-
-    // 选择下拉项：填充班级名称
-    classDropdown.addEventListener('click', (e) => {
-        const classItem = e.target.closest('.class-item');
-        if (classItem) {
-            const className = classItem.dataset.name;
-            classInput.value = className;
-            classDropdown.classList.add('hidden');
-        }
-    });
-
-    classInput.addEventListener('focus', () => {
-        const currentVal = classInput.value.trim().toLowerCase();
-        filterAndShowClasses(currentVal, inputId, dropdownId);
-        classInput.select();
-    });
-}
 
 // 筛选班级并显示下拉选项（支持ID和名称搜索）
 function filterAndShowClasses(searchVal, inputId, dropdownId) {
