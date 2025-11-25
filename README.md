@@ -44,6 +44,7 @@
  **配置数据库** 
 创建一个名为 student_management 的 MySQL 数据库。
 打开 src/main/resources/application.properties 文件，修改以下配置以匹配你的数据库设置：
+```bash
 properties
 spring.datasource.url=jdbc:mysql://localhost:3306/student_management?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
 spring.datasource.username=root
@@ -51,15 +52,21 @@ spring.datasource.password=your-password
 
  **构建并运行** 
 使用 Maven 命令：
+```bash
 bash
+
 运行
+```bash
 mvn spring-boot:run
+
 或者，你也可以在 IDE（如 IntelliJ IDEA, Eclipse）中直接运行 StudentManagementApplication.java 的 main 方法。
 
  **访问系统**
 启动成功后，在浏览器中访问：
+```bash
 plaintext
 http://localhost:8080
+
 系统会自动跳转到登录页面。
 
  **使用说明** 
@@ -69,6 +76,8 @@ http://localhost:8080
 班级管理：在导航栏点击 “班级管理”，可以查看、添加、编辑或删除班级信息，并为班级分配班主任。
 
 项目结构
+
+```bash
 src/
 ├── main/
 │   ├── java/
