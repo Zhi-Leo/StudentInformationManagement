@@ -164,11 +164,16 @@ function renderClassPagination() {
     if (!container) return;
 
     let html = `
-        <div class="flex items-center justify-between px-4 py-3">
+        <div class="flex items-center justify-between px-4 py-3 sm:px-6">
+            <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+            <div>
+                 <p class="text-sm text-gray-700">
+                        显示第 <span class="font-medium">${currentClassPage + 1}</span> 页，
+                        共 <span class="font-medium">${totalClassPages}</span> 页，
+                        总计 <span class="font-medium">${totalClassItems}</span> 条记录
+                 </p>
+                </div>
             <div class="text-sm text-gray-700">
-                显示第 ${currentClassPage + 1} 页，共 ${totalClassPages} 页，总计 ${totalClassItems} 条
-            </div>
-            <div class="flex space-x-2">
                 <button onclick="changeClassPage(${currentClassPage - 1})" 
                         ${currentClassPage === 0 ? 'disabled class="opacity-50 cursor-not-allowed"' : ''}>
                     上一页
@@ -196,7 +201,62 @@ function renderClassPagination() {
 
     container.innerHTML = html;
 }
+function renderClassPagination() {
+    const paginationContainer = document.getElementById("classPaginationContainer");
+    if (!paginationContainer) return;
 
+    let html = `
+        <div class="flex items-center justify-between px-4 py-3 sm:px-6">
+            <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                <div>
+                    <p class="text-sm text-gray-700">
+                        显示第 <span class="font-medium">${currentClassPage + 1}</span> 页，
+                        共 <span class="font-medium">${totalClassPages}</span> 页，
+                        总计 <span class="font-medium">${totalClassItems}</span> 条记录
+                    </p>
+                </div>
+            <div>
+                    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+    `;
+
+    // 上一页按钮
+    html += `
+        <button class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                onclick="changeClassPage(${currentClassPage - 1})" ${currentClassPage === 0 ? 'disabled' : ''}>
+            <span class="sr-only">上一页</span>
+            <i class="fa fa-chevron-left"></i>
+        </button>
+    `;
+
+    // 页码按钮（简化版，只显示当前页前后各2页）
+    for (let i = Math.max(0, currentClassPage - 2); i < Math.min(totalClassPages, currentClassPage + 3); i++) {
+        html += `
+            <button class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium ${
+            i === currentClassPage ? 'z-10 bg-indigo-50 border-indigo-500 text-indigo-600' : 'text-gray-700 hover:bg-gray-50'
+        }" onclick="changeClassPage(${i})">
+                ${i + 1}
+            </button>
+        `;
+    }
+
+    // 下一页按钮
+    html += `
+        <button class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                onclick="changeClassPage(${currentClassPage + 1})" ${currentClassPage >= totalClassPages - 1 ? 'disabled' : ''}>
+            <span class="sr-only">下一页</span>
+            <i class="fa fa-chevron-right"></i>
+        </button>
+    `;
+
+    html += `
+                    </nav>
+                </div>
+            </div>
+        </div>
+    `;
+
+    paginationContainer.innerHTML = html;
+}
 // 切换班级页码
 function changeClassPage(page) {
     if (page >= 0 && page < totalClassPages) {
