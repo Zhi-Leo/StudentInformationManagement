@@ -3,6 +3,10 @@ package com.example.student_management.controller;
 import com.example.student_management.entity.Teacher;
 import com.example.student_management.service.TeacherService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,19 +21,20 @@ public class TeacherController {
     private TeacherService teacherService;
 
     // 获取所有教师
+    // 分页查询教师列表
     @GetMapping
-    public List<Teacher> getAllTeachers() {
-        return teacherService.getAllTeachers();
-    }
+    public Page<Teacher> getTeachers(
+            @RequestParam(defaultValue = "0") int page, // 页码（从0开始）
+            @RequestParam(defaultValue = "10") int size, // 每页条数
+            @RequestParam(required = false) String name // 可选：按教师姓名搜索
+    ) {
+        // 按教师ID升序排序（可根据需求修改）
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
 
-    // 根据 ID 获取教师
-    @GetMapping("/{id}")
-    public ResponseEntity<Teacher> getTeacherById(@PathVariable String id) {
-        Teacher teacher = teacherService.getTeacherById(id);
-        if (teacher != null) {
-            return new ResponseEntity<>(teacher, HttpStatus.OK);
+        if (name != null && !name.isEmpty()) {
+            return teacherService.findByNameContaining(name, pageable);
         } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            return teacherService.findAll(pageable);
         }
     }
 

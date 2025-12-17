@@ -6,6 +6,10 @@ import com.example.student_management.service.StudentService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,10 +28,25 @@ public class StudentController {
     private ClassInfoService classInfoService;
 
     // 获取所有学生（不变）
-    @GetMapping
-    public List<Student> getAllStudents() {
-        return studentService.getAllStudents();
+
+//    @GetMapping
+//    public List<Student> getAllStudents() {
+//        return studentService.getAllStudents();
+//    }
+@GetMapping
+public Page<Student> getStudents(
+        @RequestParam(defaultValue = "0") int page,  // 页码（从0开始）
+        @RequestParam(defaultValue = "10") int size, // 每页条数
+        @RequestParam(required = false) String name  // 可选搜索条件
+) {
+    Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
+
+    if (name != null && !name.isEmpty()) {
+        return studentService.findByNameContaining(name, pageable);
+    } else {
+        return studentService.findAll(pageable);
     }
+}
 
     // 根据 ID 获取学生（不变）
     @GetMapping("/{id}")

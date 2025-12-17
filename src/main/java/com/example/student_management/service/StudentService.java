@@ -3,6 +3,8 @@ package com.example.student_management.service;
 import com.example.student_management.entity.Student;
 import com.example.student_management.repository.StudentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,6 +17,16 @@ public class StudentService {
 
     public StudentService(StudentRepository studentRepository) {
         this.studentRepository = studentRepository;
+    }
+
+    // 注入StudentRepository...
+
+    public Page<Student> findAll(Pageable pageable) {
+        return studentRepository.findAll(pageable);
+    }
+
+    public Page<Student> findByNameContaining(String name, Pageable pageable) {
+        return studentRepository.findByNameContaining(name, pageable);
     }
 
     // 获取所有学生

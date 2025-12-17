@@ -1,6 +1,12 @@
 // 班级数据存储
 let originalClasses = [];
 
+// 分页参数
+let currentClassPage = 0; // 当前页码（从0开始）
+const classPageSize = 10; // 每页10条
+let totalClassPages = 0; // 总页数
+let totalClassItems = 0; // 总条数
+
 // DOM加载完成后初始化
 // 页面加载完成初始化（替换原DOMContentLoaded事件）
 document.addEventListener('DOMContentLoaded', () => {
@@ -12,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initClassEvents(); // 初始化班级基础事件
     loadClasses(); // 加载班级数据
     loadTeachers(); // 加载教师数据（供下拉框使用）
+    bindClassSearchEvent(); // 绑定搜索事件
 
     // 同时初始化「新增」和「编辑」的教师下拉框
     initTeacherDropdown('headTeacher', 'teacherDropdown', 'headTeacherId'); // 新增班级
@@ -88,34 +95,26 @@ function initClassEvents() {
 
 // 加载班级数据
 function loadClasses() {
-    const classesBody = document.getElementById('classesBody');
-    classesBody.innerHTML = `
-        <tr class="text-center">
-            <td colspan="5" class="px-6 py-12 text-gray-500">
-                <i class="fa fa-spinner fa-spin text-2xl mb-2"></i>
-                <p>加载中...</p>
-            </td>
-        </tr>
-    `;
+    const searchTerm = document.getElementById("classSearch")?.value.trim() || "";
+    // 构造请求URL（带分页和搜索参数）
+    const url = `/api/classes?page=${currentClassPage}&size=${classPageSize}` +
+        (searchTerm ? `&className=${encodeURIComponent(searchTerm)}` : "");
 
-    fetch('/api/classes')
+    fetch(url)
         .then(response => {
-            if (!response.ok) throw new Error(`HTTP错误: ${response.status}`);
+            if (!response.ok) throw new Error("班级数据加载失败");
             return response.json();
         })
         .then(data => {
-            originalClasses = data;
-            renderClasses(data);
+            // 解析后端返回的分页数据
+            const classes = data.content; // 当前页班级列表
+            totalClassPages = data.totalPages; // 总页数
+            totalClassItems = data.totalElements; // 总条数
+            renderClasses(classes); // 渲染班级表格
+            renderClassPagination(); // 渲染分页控件
         })
         .catch(error => {
-            classesBody.innerHTML = `
-                <tr class="text-center">
-                    <td colspan="5" class="px-6 py-12 text-gray-500">
-                        <i class="fa fa-exclamation-triangle text-2xl mb-2"></i>
-                        <p>加载失败: ${error.message}</p>
-                    </td>
-                </tr>
-            `;
+            console.error("加载班级失败:", error);
         });
 }
 
@@ -158,6 +157,62 @@ function renderClasses(classes) {
         classesBody.appendChild(row);
     });
 }
+
+// 渲染班级分页控件
+function renderClassPagination() {
+    const container = document.getElementById("classPaginationContainer");
+    if (!container) return;
+
+    let html = `
+        <div class="flex items-center justify-between px-4 py-3">
+            <div class="text-sm text-gray-700">
+                显示第 ${currentClassPage + 1} 页，共 ${totalClassPages} 页，总计 ${totalClassItems} 条
+            </div>
+            <div class="flex space-x-2">
+                <button onclick="changeClassPage(${currentClassPage - 1})" 
+                        ${currentClassPage === 0 ? 'disabled class="opacity-50 cursor-not-allowed"' : ''}>
+                    上一页
+                </button>
+    `;
+
+    // 页码按钮
+    for (let i = Math.max(0, currentClassPage - 2); i < Math.min(totalClassPages, currentClassPage + 3); i++) {
+        html += `
+            <button onclick="changeClassPage(${i})" 
+                    class="${i === currentClassPage ? 'bg-blue-500 text-white' : ''}">
+                ${i + 1}
+            </button>
+        `;
+    }
+
+    html += `
+                <button onclick="changeClassPage(${currentClassPage + 1})" 
+                        ${currentClassPage >= totalClassPages - 1 ? 'disabled class="opacity-50 cursor-not-allowed"' : ''}>
+                    下一页
+                </button>
+            </div>
+        </div>
+    `;
+
+    container.innerHTML = html;
+}
+
+// 切换班级页码
+function changeClassPage(page) {
+    if (page >= 0 && page < totalClassPages) {
+        currentClassPage = page;
+        loadClasses();
+    }
+}
+
+// 绑定班级搜索事件
+function bindClassSearchEvent() {
+    document.getElementById("classSearch")?.addEventListener("input", () => {
+        currentClassPage = 0; // 搜索时重置到第一页
+        loadClasses();
+    });
+}
+
 
 // 过滤班级列表
 function filterClasses() {

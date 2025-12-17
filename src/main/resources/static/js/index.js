@@ -13,6 +13,11 @@ document.addEventListener("DOMContentLoaded", () => {
 	loadSharedComponents(); // 加载导航栏、页脚等
 	initSharedEvents(); // 初始化共用事件
 	startTicker(); // 启动环形滚动
+	// 3. 绑定搜索框输入事件（放这里！）
+	document.getElementById("studentSearch")?.addEventListener("input", () => {
+		currentPage = 0; // 搜索时重置到第一页
+		filterStudents(); // 或直接调用 loadStudents()，根据你的逻辑选择
+	});
 });
 function startTicker() {
 	const ticker = document.getElementById("ticker-content");

@@ -2,6 +2,12 @@
 let originalTeachers = [];
 let originalClasses = []; // 新增：存储班级列表（供下拉框使用）
 
+// 分页参数
+let currentTeacherPage = 0; // 当前页码（从0开始）
+const teacherPageSize = 10; // 每页10条
+let totalTeacherPages = 0; // 总页数
+let totalTeacherItems = 0; // 总条数
+
 document.addEventListener("DOMContentLoaded", () => {
 	// 第一步：登录状态校验（核心）
 	// login0("教师");
@@ -13,6 +19,8 @@ document.addEventListener("DOMContentLoaded", () => {
 		initClassDropdown("teacherClass", "addTeacherClassDropdown");
 		initClassDropdown("editTeacherClass", "editTeacherClassDropdown");
 	});
+	loadTeachers(); // 首次加载教师列表
+	bindTeacherSearchEvent(); // 绑定搜索事件
 });
 
 // 新增：加载班级数据（从后端获取所有班级）
@@ -311,38 +319,28 @@ function initTeacherEvents() {
 	});
 }
 
-// 加载教师数据（不变）
+// 加载教师列表（带分页）
 function loadTeachers() {
-	const teachersBody = document.getElementById("teachersBody");
-	teachersBody.innerHTML = `
-        <tr class="text-center">
-            <td colspan="7" class="px-6 py-12 text-gray-500">
-                <i class="fa fa-spinner fa-spin text-2xl mb-2"></i>
-                <p>加载中...</p>
-            </td>
-        </tr>
-    `;
+	const searchTerm = document.getElementById("teacherSearch")?.value.trim() || "";
+	// 构造请求URL（带分页和搜索参数）
+	const url = `/api/teachers?page=${currentTeacherPage}&size=${teacherPageSize}` +
+		(searchTerm ? `&name=${encodeURIComponent(searchTerm)}` : "");
 
-	return fetch("/api/teachers")
-		.then((response) => {
-			if (!response.ok) throw new Error(`HTTP错误: ${response.status}`);
+	fetch(url)
+		.then(response => {
+			if (!response.ok) throw new Error("教师数据加载失败");
 			return response.json();
 		})
-		.then((data) => {
-			originalTeachers = data;
-			renderTeachers(data);
-			return data;
+		.then(data => {
+			// 解析后端返回的分页数据
+			const teachers = data.content; // 当前页教师列表
+			totalTeacherPages = data.totalPages; // 总页数
+			totalTeacherItems = data.totalElements; // 总条数
+			renderTeachers(teachers); // 渲染教师表格
+			renderTeacherPagination(); // 渲染分页控件
 		})
-		.catch((error) => {
-			teachersBody.innerHTML = `
-                <tr class="text-center">
-                    <td colspan="7" class="px-6 py-12 text-gray-500">
-                        <i class="fa fa-exclamation-triangle text-2xl mb-2"></i>
-                        <p>加载失败: ${error.message}</p>
-                    </td>
-                </tr>
-            `;
-			return [];
+		.catch(error => {
+			console.error("加载教师失败:", error);
 		});
 }
 
@@ -397,6 +395,62 @@ function renderTeachers(teachers) {
 		teachersBody.appendChild(row);
 	});
 }
+
+// 渲染教师分页控件
+function renderTeacherPagination() {
+	const container = document.getElementById("teacherPaginationContainer");
+	if (!container) return;
+
+	let html = `
+        <div class="flex items-center justify-between px-4 py-3">
+            <div class="text-sm text-gray-700">
+                显示第 ${currentTeacherPage + 1} 页，共 ${totalTeacherPages} 页，总计 ${totalTeacherItems} 条
+            </div>
+            <div class="flex space-x-2">
+                <button onclick="changeTeacherPage(${currentTeacherPage - 1})" 
+                        ${currentTeacherPage === 0 ? 'disabled class="opacity-50 cursor-not-allowed"' : ''}>
+                    上一页
+                </button>
+    `;
+
+	// 页码按钮
+	for (let i = Math.max(0, currentTeacherPage - 2); i < Math.min(totalTeacherPages, currentTeacherPage + 3); i++) {
+		html += `
+            <button onclick="changeTeacherPage(${i})" 
+                    class="${i === currentTeacherPage ? 'bg-blue-500 text-white' : ''}">
+                ${i + 1}
+            </button>
+        `;
+	}
+
+	html += `
+                <button onclick="changeTeacherPage(${currentTeacherPage + 1})" 
+                        ${currentTeacherPage >= totalTeacherPages - 1 ? 'disabled class="opacity-50 cursor-not-allowed"' : ''}>
+                    下一页
+                </button>
+            </div>
+        </div>
+    `;
+
+	container.innerHTML = html;
+}
+
+// 切换教师页码
+function changeTeacherPage(page) {
+	if (page >= 0 && page < totalTeacherPages) {
+		currentTeacherPage = page;
+		loadTeachers();
+	}
+}
+
+// 绑定教师搜索事件
+function bindTeacherSearchEvent() {
+	document.getElementById("teacherSearch")?.addEventListener("input", () => {
+		currentTeacherPage = 0; // 搜索时重置到第一页
+		loadTeachers();
+	});
+}
+
 
 // 编辑教师（回显班级名称）
 function editTeacher(id) {
