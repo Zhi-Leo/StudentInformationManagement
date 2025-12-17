@@ -5,7 +5,7 @@ let originalClasses = [];
 // 页面加载完成初始化（替换原DOMContentLoaded事件）
 document.addEventListener('DOMContentLoaded', () => {
     // 第一步：登录状态校验（核心）
-    login0("班级");
+    // login0("班级");
     // 登出
     initAutoLogout();
 

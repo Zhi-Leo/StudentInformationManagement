@@ -4,19 +4,82 @@
     }
 }
 
-body {
-    /* 设置背景图 */
+/* 关键：将背景图移到独立的固定层，避免受布局流影响 */
+body::before {
+    content: "";
+    position: fixed; /* 固定在视口，不随滚动/布局变化 */
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
     background-image: url('../唯美少女 马尾辫4K动漫壁纸3840_2160_彼岸图网.jpg');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
+    z-index: -1; /* 放在所有内容下方 */
+    filter: blur(0); /* 可选：添加轻微模糊提升内容可读性 */
+}
+
+/* 重置body样式，避免影响背景层 */
+body {
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden; /* 防止横向滚动 */
 }
 
 #teacherClass, #editTeacherClass {
-    caret-color: #374151 !important; /* 深灰色光标，确保可见 */
+    caret-color: #374151 !important;
 }
 
-/* 聚焦时的样式增强 */
 #teacherClass:focus, #editTeacherClass:focus {
-    outline: 2px solid rgba(59, 130, 246, 0.5); /* 蓝色聚焦边框 */
+    outline: 2px solid rgba(59, 130, 246, 0.5);
+}
+
+/* 页脚样式：修复固定定位的宽度问题 */
+.footer-fixed {
+    position: fixed;
+    bottom: 0;
+    width: 100%; /* 减去导航栏宽度，避免被遮挡 */
+    z-index: 10; /* 确保页脚在主内容上方 */
+}
+
+/* 主体内容样式：修复底部边距+左侧边距 */
+.main-content {
+    padding-bottom: 80px; /* 避开页脚 */
+    margin-left: 16rem; /* 避开导航栏，核心解决遮挡 */
+    min-height: 100vh;
+}
+
+/* 导航栏核心样式：固定定位+不影响背景图 */
+#navbar-container {
+    width: 256px; /* 固定宽度 */
+    height: calc(100vh - 72px); /* 减去页脚高度 */
+    position: fixed; /* 固定在左侧，不影响背景图 */
+    top: 0;
+    left: 0;
+    z-index: 99; /* 高于背景层，低于模态框 */
+    overflow-y: auto; /* 内容过多时滚动 */
+    background-color: rgba(255, 255, 255, 0.5); /* 导航栏半透背景，提升按钮可读性 */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+
+
+/* 小屏幕适配 */
+@media (max-width: 768px) {
+    #navbar-container {
+        width: 56px !important;
+    }
+    .main-content {
+        margin-left: 56px !important;
+    }
+    .footer-fixed {
+        width: calc(100% - 56px) !important;
+        left: 56px !important;
+    }
+    #navbar-container .text-xl,
+    #navbar-container span:not(.icon) {
+        display: none;
+    }
 }

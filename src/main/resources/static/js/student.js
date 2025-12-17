@@ -4,7 +4,7 @@ let originalClasses = []; // 存储班级列表（包含班级ID和名称等信�
 
 document.addEventListener('DOMContentLoaded', () => {
     // 登录状态校验
-    login0("学生");
+    // login0("学生");
     initStudentEvents();
     // 登出
     initAutoLogout();
