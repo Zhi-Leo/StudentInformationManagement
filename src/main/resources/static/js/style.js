@@ -229,3 +229,81 @@ function initClassDropdown(inputId, dropdownId) {
 		classInput.select(); // 可选：选中现有内容，增强交互
 	});
 }
+//
+//
+// // 渲染教师分页控件
+// function renderTeacherPagination() {
+// 	const paginationContainer = document.getElementById("teacherPaginationContainer");
+// 	if (!paginationContainer) return;
+//
+// 	let html = `
+//         <div class="flex items-center justify-between px-4 py-3 sm:px-6">
+//             <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+//                 <div>
+//                     <p class="text-sm text-gray-700">
+//                         显示第 <span class="font-medium">${currentTeacherPage + 1}</span> 页，
+//                         共 <span class="font-medium">${totalTeacherPages}</span> 页，
+//                         总计 <span class="font-medium">${totalTeacherItems}</span> 条记录
+//                     </p>
+//                 </div>
+//             <div>
+//                     <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+//     `;
+//
+// 	// 上一页按钮
+// 	html += `
+//         <button class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+//                 onclick="changeTeacherPage(${currentTeacherPage - 1})" ${currentTeacherPage === 0 ? 'disabled' : ''}>
+//             <span class="sr-only">上一页</span>
+//             <i class="fa fa-chevron-left"></i>
+//         </button>
+//     `;
+//
+// 	// 页码按钮（简化版，只显示当前页前后各2页）
+// 	for (let i = Math.max(0, currentTeacherPage - 2); i < Math.min(totalTeacherPages, currentTeacherPage + 3); i++) {
+// 		html += `
+//             <button class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium ${
+// 			i === currentTeacherPage ? 'z-10 bg-indigo-50 border-indigo-500 text-indigo-600' : 'text-gray-700 hover:bg-gray-50'
+// 		}" onclick="changeTeacherPage(${i})">
+//                 ${i + 1}
+//             </button>
+//         `;
+// 	}
+//
+// 	// 下一页按钮
+// 	html += `
+//         <button class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+//                 onclick="changeTeacherPage(${currentTeacherPage + 1})" ${currentTeacherPage >= totalTeacherPages - 1 ? 'disabled' : ''}>
+//             <span class="sr-only">下一页</span>
+//             <i class="fa fa-chevron-right"></i>
+//         </button>
+//     `;
+//
+// 	html += `
+//                     </nav>
+//                 </div>
+//             </div>
+//         </div>
+//     `;
+//
+// 	paginationContainer.innerHTML = html;
+// }
+//
+// // 切换教师页码
+// function changeTeacherPage(page) {
+// 	if (page >= 0 && page < totalTeacherPages) {
+// 		currentTeacherPage = page;
+// 		loadTeachers();
+// 	}
+// }
+//
+//
+//
+//
+// // 绑定教师搜索事件
+// function bindSearchEvent(name) {
+// 	document.getElementById(`${name}+"Search"`)?.addEventListener("input", () => {
+// 		currentTeacherPage = 0; // 搜索时重置到第一页
+// 		loadTeachers();
+// 	});
+// }

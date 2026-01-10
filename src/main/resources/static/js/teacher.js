@@ -31,7 +31,7 @@ function loadClasses() {
 			return response.json();
 		})
 		.then((data) => {
-			originalClasses = data; // 存储班级数据（包含name字段）
+			originalClasses = data; // 存储班级数据
 			return data;
 		})
 		.catch((error) => {
@@ -44,16 +44,16 @@ function loadClasses() {
 			return [];
 		});
 }
-
 // 新增：筛选班级并显示下拉选项
 // 1. 修改班级筛选逻辑（支持ID和名称搜索）
 function filterAndShowClasses(searchVal, inputId, dropdownId) {
 	const classDropdown = document.getElementById(dropdownId);
 	const classInput = document.getElementById(inputId);
-	if (!classInput) return;
+	if (!classInput || !classDropdown) return;
 
 	classDropdown.innerHTML = "";
 
+	// 班级数据加载中
 	if (originalClasses.length === 0) {
 		classDropdown.innerHTML = `
             <div class="px-4 py-2 text-gray-500 text-sm">
@@ -64,15 +64,16 @@ function filterAndShowClasses(searchVal, inputId, dropdownId) {
 		return;
 	}
 
-	// 关键修改：同时匹配班级ID和名称（toLowerCase()忽略大小写）
+	// 过滤班级（匹配ID或名称，忽略大小写）
 	const filteredClasses = searchVal
 		? originalClasses.filter(
-				(cls) =>
-					cls.id.toLowerCase().includes(searchVal) || // 匹配班级ID
-					cls.name.toLowerCase().includes(searchVal) // 匹配班级名称
-		  )
-		: originalClasses.slice(0, 10);
+			(cls) =>
+				cls.id.toLowerCase().includes(searchVal.toLowerCase()) ||
+				cls.name.toLowerCase().includes(searchVal.toLowerCase())
+		)
+		: originalClasses.slice(0, 10); // 默认显示前10条
 
+	// 无匹配结果
 	if (filteredClasses.length === 0) {
 		classDropdown.innerHTML = `
             <div class="px-4 py-2 text-gray-500 text-sm">
@@ -83,24 +84,18 @@ function filterAndShowClasses(searchVal, inputId, dropdownId) {
 		return;
 	}
 
-	// 下拉项显示"ID - 名称"，方便用户识别ID
+	// 渲染下拉选项
 	filteredClasses.forEach((cls) => {
 		const item = document.createElement("div");
-		const isSelected =
-			classInput.value.trim() === cls.name ||
-			classInput.value.trim() === cls.id;
+		const isSelected = classInput.value.trim() === cls.name || classInput.value.trim() === cls.id;
 		item.className = `class-item px-4 py-2 hover:bg-gray-100 cursor-pointer transition-colors ${
 			isSelected ? "bg-indigo-50 text-indigo-600" : ""
 		}`;
 		item.dataset.name = cls.name;
-		item.dataset.id = cls.id; // 存储ID，方便后续扩展
+		item.dataset.id = cls.id;
 		item.innerHTML = `
-            <div class="font-medium">${cls.id} - ${
-			cls.name
-		}</div>  <!-- 显示ID和名称 -->
-            <div class="text-xs text-gray-500">班主任：${
-							cls.headTeacher || "未设置"
-						}</div>
+            <div class="font-medium">${cls.id} - ${cls.name}</div>
+            <div class="text-xs text-gray-500">班主任：${cls.headTeacher || "未设置"}</div>
         `;
 		classDropdown.appendChild(item);
 	});
@@ -111,9 +106,10 @@ function filterAndShowClasses(searchVal, inputId, dropdownId) {
 // 2. 修改班级校验逻辑（允许为空）
 function validateClassName(inputId) {
 	const classInput = document.getElementById(inputId);
-	const className = classInput.value.trim();
+	if (!classInput) return true;
 
-	// 允许为空，仅当有值时校验有效性
+	const className = classInput.value.trim();
+	// 有值时校验有效性
 	if (
 		className &&
 		!originalClasses.some(
@@ -128,20 +124,20 @@ function validateClassName(inputId) {
 		classInput.focus();
 		return false;
 	}
-
 	return true;
 }
 
 // 3. 修改添加教师函数（移除科目必填校验）
 function addTeacher() {
+	// 获取表单数据
 	const id = document.getElementById("teacherId").value.trim();
 	const name = document.getElementById("teacherName").value.trim();
-	const clas = document.getElementById("teacherClass").value.trim(); // 允许为空
+	const clas = document.getElementById("teacherClass").value.trim();
 	const age = parseInt(document.getElementById("teacherAge").value);
 	const sex = document.getElementById("teacherSex").value;
-	const teaching = document.getElementById("teacherTeaching").value.trim(); // 允许为空
+	const teaching = document.getElementById("teacherTeaching").value.trim();
 
-	// 基础校验（移除!teaching和!clas的判断）
+	// 基础校验
 	if (!id || !name || isNaN(age) || age < 20 || age > 70) {
 		window.showNotification(
 			"error",
@@ -151,50 +147,59 @@ function addTeacher() {
 		return;
 	}
 
-	// 新增：班主任班级分配校验
+	// 班主任班级分配校验
 	if (!checkHeadTeacherRestriction(id, name, clas)) {
 		return;
 	}
-	const submitBtn = document.querySelector(
-		'#addTeacherForm button[type="submit"]'
-	);
-	submitBtn.disabled = true;
-	submitBtn.textContent = "提交中...";
 
+	// 禁用提交按钮，防止重复提交
+	const submitBtn = document.querySelector('#addTeacherForm button[type="submit"]');
+	if (submitBtn) {
+		submitBtn.disabled = true;
+		submitBtn.textContent = "提交中...";
+	}
+
+	// 发送添加请求
 	fetch("/api/teachers", {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify({ id, name, clas, age, sex, teaching }), // 允许clas和teaching为空
+		body: JSON.stringify({ id, name, clas, age, sex, teaching }),
 	})
 		.then((response) => {
 			if (!response.ok) throw new Error("添加失败，可能ID已存在");
 			return response.json();
 		})
-		.then((data) => {
-			originalTeachers.push(data);
-			renderTeachers(originalTeachers);
+		.then(() => {
+			// 重新加载数据，更新列表
+			loadTeachers();
+			// 关闭模态框并重置表单
 			document.getElementById("addTeacherModal").classList.add("hidden");
+			document.getElementById("addTeacherForm").reset();
 			window.showNotification("success", "成功", "教师添加成功");
 		})
 		.catch((error) => {
 			window.showNotification("error", "失败", error.message);
 		})
 		.finally(() => {
-			submitBtn.disabled = false;
-			submitBtn.textContent = "保存";
+			// 恢复提交按钮
+			if (submitBtn) {
+				submitBtn.disabled = false;
+				submitBtn.textContent = "保存";
+			}
 		});
 }
 
 // 4. 修改更新教师函数（移除科目必填校验）
 function updateTeacher() {
+	// 获取表单数据
 	const id = document.getElementById("editTeacherId").value;
 	const name = document.getElementById("editTeacherName").value.trim();
-	const clas = document.getElementById("editTeacherClass").value.trim(); // 允许为空
+	const clas = document.getElementById("editTeacherClass").value.trim();
 	const age = parseInt(document.getElementById("editTeacherAge").value);
 	const sex = document.getElementById("editTeacherSex").value;
-	const teaching = document.getElementById("editTeacherTeaching").value.trim(); // 允许为空
+	const teaching = document.getElementById("editTeacherTeaching").value.trim();
 
-	// 基础校验（移除!teaching和!clas的判断）
+	// 基础校验
 	if (!name || isNaN(age) || age < 20 || age > 70) {
 		window.showNotification(
 			"error",
@@ -204,24 +209,25 @@ function updateTeacher() {
 		return;
 	}
 
-	// 新增：班主任班级分配校验
+	// 班主任班级分配校验
 	if (!checkHeadTeacherRestriction(id, name, clas)) {
 		return;
 	}
 
+	// 发送更新请求
 	fetch(`/api/teachers/${id}`, {
 		method: "PUT",
 		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify({ id, name, clas, age, sex, teaching }), // 允许clas和teaching为空
+		body: JSON.stringify({ id, name, clas, age, sex, teaching }),
 	})
 		.then((response) => {
 			if (!response.ok) throw new Error("更新失败");
 			return response.json();
 		})
-		.then((data) => {
-			const index = originalTeachers.findIndex((t) => t.id === id);
-			if (index !== -1) originalTeachers[index] = data;
-			renderTeachers(originalTeachers);
+		.then(() => {
+			// 重新加载数据，更新列表
+			loadTeachers();
+			// 关闭模态框
 			document.getElementById("editTeacherModal").classList.add("hidden");
 			window.showNotification("success", "成功", "教师信息更新成功");
 		})
@@ -317,6 +323,7 @@ function initTeacherEvents() {
 			window.confirmDelete("teacher", id, name);
 		}
 	});
+
 }
 
 // 加载教师列表（带分页）
@@ -336,6 +343,7 @@ function loadTeachers() {
 			const teachers = data.content; // 当前页教师列表
 			totalTeacherPages = data.totalPages; // 总页数
 			totalTeacherItems = data.totalElements; // 总条数
+			originalTeachers = teachers;
 			renderTeachers(teachers); // 渲染教师表格
 			renderTeacherPagination(); // 渲染分页控件
 		})
@@ -500,7 +508,7 @@ function editTeacher(id) {
 	document.getElementById("editTeacherModal").classList.remove("hidden");
 }
 
-// 删除教师（不变）
+// 删除教师（修复：删除后重新加载分页数据）
 window.deleteTeacher = function (id) {
 	if (!id) {
 		window.showNotification("error", "错误", "未找到教师ID");
@@ -512,16 +520,20 @@ window.deleteTeacher = function (id) {
 	})
 		.then((response) => {
 			if (!response.ok) throw new Error("删除失败，可能存在关联课程或班级");
-			originalTeachers = originalTeachers.filter(
-				(teacher) => teacher.id !== id
-			);
-			renderTeachers(originalTeachers);
+			// 修复1：删除成功后，判断当前页是否为空，若为空则跳转到上一页
+			const currentPageCount = originalTeachers.length;
+			if (currentPageCount === 1 && currentTeacherPage > 0) {
+				currentTeacherPage--;
+			}
+			// 修复2：重新加载分页数据
+			loadTeachers();
 			window.showNotification("success", "成功", "教师删除成功");
 		})
 		.catch((error) => {
 			window.showNotification("error", "失败", error.message);
 		});
 };
+
 
 // 搜索过滤教师（支持班级搜索，不变）
 function filterTeachers() {
