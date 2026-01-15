@@ -26,7 +26,7 @@ document.getElementById('loginForm').addEventListener('submit', function (e) {
             if (data === '登录成功') {
                 // 登录成功后跳转到主页
                 localStorage.setItem('isLoggedIn', 'true');
-                window.location.href = 'index.html';
+                window.location.href = '/html/index.html';
             }
         })
         .catch(error => {
