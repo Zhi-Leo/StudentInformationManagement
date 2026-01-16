@@ -10,7 +10,7 @@ let totalTeacherItems = 0; // 总条数
 
 document.addEventListener("DOMContentLoaded", () => {
 	// 第一步：登录状态校验（核心）
-	// login0("教师");
+	login0("教师");
 	initTeacherEvents();
 	initAutoLogout();
 	// 并行加载教师和班级数据
@@ -25,17 +25,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // 新增：加载班级数据（从后端获取所有班级）
 function loadClasses() {
-	return fetch("/api/classes")
+	// 请求所有班级数据（不分页）
+	return fetch("/api/classes?page=0&size=100")
 		.then((response) => {
 			if (!response.ok) throw new Error(`班级数据加载失败: ${response.status}`);
 			return response.json();
 		})
 		.then((data) => {
-			originalClasses = data; // 存储班级数据
-			return data;
+			// 从分页响应中获取班级数组
+			originalClasses = Array.isArray(data.content) ? data.content : [];
+			return originalClasses;
 		})
 		.catch((error) => {
 			console.error("加载班级数据失败:", error);
+			originalClasses = []; // 出错时确保是数组
 			window.showNotification(
 				"error",
 				"错误",
@@ -52,6 +55,11 @@ function filterAndShowClasses(searchVal, inputId, dropdownId) {
 	if (!classInput || !classDropdown) return;
 
 	classDropdown.innerHTML = "";
+
+	// 确保originalClasses始终是数组
+	if (!Array.isArray(originalClasses)) {
+		originalClasses = [];
+	}
 
 	// 班级数据加载中
 	if (originalClasses.length === 0) {
@@ -109,6 +117,12 @@ function validateClassName(inputId) {
 	if (!classInput) return true;
 
 	const className = classInput.value.trim();
+	
+	// 确保originalClasses始终是数组
+	if (!Array.isArray(originalClasses)) {
+		originalClasses = [];
+	}
+	
 	// 有值时校验有效性
 	if (
 		className &&
@@ -564,6 +578,11 @@ function filterTeachers() {
 // 新增：校验班主任的班级分配限制
 // 修复：校验班主任的班级分配限制
 function checkHeadTeacherRestriction(teacherId, teacherName, targetClass) {
+	// 确保originalClasses始终是数组
+	if (!Array.isArray(originalClasses)) {
+		originalClasses = [];
+	}
+	
 	// 1. 调试日志：确认参数是否正确
 	console.log("校验班主任限制：", {
 		teacherId, // 教师ID

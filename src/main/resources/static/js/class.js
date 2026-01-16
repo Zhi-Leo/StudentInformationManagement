@@ -11,7 +11,7 @@ let totalClassItems = 0; // 总条数
 // 页面加载完成初始化（替换原DOMContentLoaded事件）
 document.addEventListener('DOMContentLoaded', () => {
     // 第一步：登录状态校验（核心）
-    // login0("班级");
+    login0("班级");
     // 登出
     initAutoLogout();
 
@@ -107,14 +107,21 @@ function loadClasses() {
         })
         .then(data => {
             // 解析后端返回的分页数据
-            const classes = data.content; // 当前页班级列表
-            totalClassPages = data.totalPages; // 总页数
-            totalClassItems = data.totalElements; // 总条数
+            const classes = data.content || []; // 当前页班级列表
+            totalClassPages = data.totalPages || 0; // 总页数
+            totalClassItems = data.totalElements || 0; // 总条数
+            
+            // 更新本地存储的原始班级数据
+            originalClasses = classes;
+            
             renderClasses(classes); // 渲染班级表格
             renderClassPagination(); // 渲染分页控件
         })
         .catch(error => {
             console.error("加载班级失败:", error);
+            // 出错时确保originalClasses是数组
+            originalClasses = [];
+            renderClasses(originalClasses);
         });
 }
 
@@ -309,6 +316,11 @@ function editClass(classId, className, headTeacherName, number, headTeacherId) {
     const editHeadTeacherInput = document.getElementById('editHeadTeacher'); // 编辑姓名输入框
     const editHeadTeacherIdInput = document.getElementById('editHeadTeacherId'); // 编辑隐藏ID
 
+    // 确保teachers是数组
+    if (!Array.isArray(teachers)) {
+        teachers = [];
+    }
+
     // 若班级已有班主任，匹配教师数据并填充
     if (headTeacherName && teachers.length > 0) {
         const matchedTeacher = teachers.find(teacher =>
@@ -438,23 +450,28 @@ function initTeacherDropdown(inputId, dropdownId, hiddenId) {
     });
 }
 
-// 从数据库加载教师列表（后端接口需返回 [{id: 't001', name: '张三'}, ...]）
+// 从数据库加载教师列表（后端返回分页数据，需要从content字段获取数组）
 function loadTeachers() {
-    fetch('/api/teachers')
+    // 请求所有教师数据（不分页）
+    fetch('/api/teachers?page=0&size=100')
         .then(response => {
             if (!response.ok) throw new Error(`HTTP错误: ${response.status}`);
             return response.json();
         })
         .then(data => {
-            teachers = data; // 存储教师数据
+            // 从分页响应中获取教师数组
+            const teacherList = Array.isArray(data.content) ? data.content : [];
+            // 确保teachers始终是数组
+            teachers = teacherList;
             // 加载完成后，若输入框有值，可触发一次筛选（可选）
             const currentValue = document.getElementById('headTeacher').value.trim().toLowerCase();
             if (currentValue) {
-                filterAndShowTeachers(currentValue);
+                filterAndShowTeachers(currentValue, 'headTeacher', 'teacherDropdown', 'headTeacherId');
             }
         })
         .catch(error => {
             console.error('加载教师失败:', error);
+            teachers = []; // 出错时确保teachers是数组
             window.showNotification('error', '错误', '教师列表加载失败，请刷新页面');
         });
 }
@@ -465,7 +482,12 @@ function filterAndShowTeachers(searchTerm, inputId, dropdownId, hiddenId) {
     const headTeacherIdInput = document.getElementById(hiddenId); // 当前实例的隐藏ID
     teacherDropdown.innerHTML = ''; // 清空旧选项
 
-    // 情况1：教师数据未加载
+    // 确保teachers是数组，增强防御性
+    if (!Array.isArray(teachers)) {
+        teachers = [];
+    }
+
+    // 情况1：教师数据未加载或为空
     if (teachers.length === 0) {
         teacherDropdown.innerHTML = `
             <div class="px-4 py-2 text-gray-500 text-sm">
@@ -653,6 +675,10 @@ function updateClass() {
 
 // 工具函数：根据输入内容（姓名/ID）匹配数据库中的教师
 function matchTeacherByInput(inputValue) {
+    // 确保teachers是数组
+    if (!Array.isArray(teachers)) {
+        teachers = [];
+    }
     if (!inputValue || teachers.length === 0) return null; // 无输入或教师数据未加载
     const trimmedValue = inputValue.trim().toLowerCase();
 

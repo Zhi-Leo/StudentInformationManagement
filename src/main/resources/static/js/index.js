@@ -5,7 +5,7 @@ let currentId = null;
 // DOM加载完成后初始化
 document.addEventListener("DOMContentLoaded", () => {
 	// 第一步：先验证登录状态（未登录则跳转）
-	// login0("");
+	login0("");
 	// 登出
 	initAutoLogout();
 
