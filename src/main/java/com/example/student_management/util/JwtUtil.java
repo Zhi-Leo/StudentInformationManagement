@@ -3,6 +3,7 @@ package com.example.student_management.util;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -11,6 +12,7 @@ import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import io.jsonwebtoken.Jws;
 
 @Component
 public class JwtUtil {
@@ -52,16 +54,16 @@ public class JwtUtil {
 
     // 从JWT令牌中提取用户名
     public String extractUsername(String token) {
-        return parseSignedClaims(token).getPayload().getSubject();
+        return parseSignedClaims(token).getBody().getSubject();
     }
 
     // 从JWT令牌中提取过期时间
     public Date extractExpiration(String token) {
-        return parseSignedClaims(token).getPayload().getExpiration();
+        return parseSignedClaims(token).getBody().getExpiration();
     }
 
     // 解析JWT令牌
-    private io.jsonwebtoken.Jws<Claims> parseSignedClaims(String token) {
+    private Jws<Claims> parseSignedClaims(String token) {
         return Jwts.parser().verifyWith(getSignKey()).build().parseSignedClaims(token);
     }
 

@@ -200,6 +200,7 @@ function addTeacher() {
 			const newTeacher = apiResponse?.data || {};
 			originalTeachers.unshift(newTeacher);
 			renderTeachers(originalTeachers);
+			renderTeacherPagination(); // 更新分页信息
 			// 重新加载数据，确保数据一致性
 			loadTeachers();
 			// 关闭模态框并重置表单

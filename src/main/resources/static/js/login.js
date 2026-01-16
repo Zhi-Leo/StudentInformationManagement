@@ -60,14 +60,8 @@ document.getElementById('registerForm').addEventListener('submit', function (e) 
     else if (!passReg.test(newUpass)) {
         errorMsg = '新密码需为6-20位，且必须包含字母和数字';
     }
-    // 校验管理员账号（同普通账号规则，可根据实际需求调整）
-    else if (!(adminUid==="root")) {
-        errorMsg = '管理员账号错误';
-    }
-    // 校验管理员密码（同普通密码规则，可要求更高复杂度，如加特殊符号）
-    else if (!(adminUpass==="root")) {
-        errorMsg = '管理员密码错误';
-    }
+    // 移除硬编码的管理员账号密码验证，由后端统一处理
+    // 这样可以支持更灵活的管理员凭证管理
 
     // 4. 处理校验结果
     if (errorMsg) {

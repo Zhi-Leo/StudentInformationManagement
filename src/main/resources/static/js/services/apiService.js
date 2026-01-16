@@ -1,4 +1,4 @@
-// ==================== API服务 ====================
+// ==================== API服务 ==================== //
 
 /**
  * 发送API请求
@@ -30,11 +30,18 @@ export async function apiRequest(url, method = 'GET', data = null, options = {})
         const response = await fetch(url, config);
         
         // 处理响应
-        const responseData = await response.json();
+        let responseData;
+        const contentType = response.headers.get('Content-Type');
+        
+        if (contentType && contentType.includes('application/json')) {
+            responseData = await response.json();
+        } else {
+            responseData = await response.text();
+        }
         
         // 检查响应状态
         if (!response.ok) {
-            throw new Error(responseData.message || 'API请求失败');
+            throw new Error(responseData.message || responseData || 'API请求失败');
         }
         
         return responseData;
@@ -121,3 +128,75 @@ export function uploadFile(url, formData, options = {}) {
     
     return apiRequest(url, 'POST', formData, uploadOptions);
 }
+
+// ==================== 业务API封装 ==================== //
+
+/**
+ * 学生相关API
+ */
+export const studentApi = {
+    getAll: (params) => get('/api/students', params),
+    getById: (id) => get(`/api/students/${id}`),
+    create: (student) => post('/api/students', student),
+    update: (id, student) => put(`/api/students/${id}`, student),
+    delete: (id) => del(`/api/students/${id}`)
+};
+
+/**
+ * 班级相关API
+ */
+export const classApi = {
+    getAll: (params) => get('/api/classes', params),
+    getById: (id) => get(`/api/classes/${id}`),
+    create: (classInfo) => post('/api/classes', classInfo),
+    update: (id, classInfo) => put(`/api/classes/${id}`, classInfo),
+    delete: (id) => del(`/api/classes/${id}`),
+    updateStudentCounts: () => put('/api/classes/updateAllStudentCounts')
+};
+
+/**
+ * 教师相关API
+ */
+export const teacherApi = {
+    getAll: (params) => get('/api/teachers', params),
+    getById: (id) => get(`/api/teachers/${id}`),
+    create: (teacher) => post('/api/teachers', teacher),
+    update: (id, teacher) => put(`/api/teachers/${id}`, teacher),
+    delete: (id) => del(`/api/teachers/${id}`)
+};
+
+/**
+ * 认证相关API
+ */
+export const authApi = {
+    login: (credentials) => {
+        const formData = new URLSearchParams();
+        formData.append('uid', credentials.uid);
+        formData.append('upass', credentials.upass);
+        
+        return fetch('/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: formData,
+            credentials: 'include'
+        }).then(response => response.json());
+    },
+    register: (data) => {
+        const formData = new URLSearchParams();
+        formData.append('newUid', data.newUid);
+        formData.append('newUpass', data.newUpass);
+        formData.append('adminUid', data.adminUid);
+        formData.append('adminUpass', data.adminUpass);
+        
+        return fetch('/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: formData,
+            credentials: 'include'
+        }).then(response => response.text());
+    }
+};

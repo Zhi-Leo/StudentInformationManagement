@@ -14,7 +14,6 @@ document.addEventListener("DOMContentLoaded", () => {
 	initStudentEvents();
 	// 登出
 	initAutoLogout();
-	loadStudents();
 	// 并行加载学生和班级数据，初始化下拉框
 	Promise.all([loadStudents(), loadClasses()]).then(() => {
 		initClassDropdown("studentClas", "classDropdown"); // 添加学生的班级下拉
@@ -356,7 +355,7 @@ function addStudent() {
 		})
 		.then((apiResponse) => {
 			const newStudent = apiResponse?.data || {};
-			originalStudents.push(newStudent);
+			originalStudents.unshift(newStudent); // 添加到数组开头，显示在第一条
 			renderStudents(originalStudents);
 			renderPagination(); // 更新分页信息
 			document.getElementById("addStudentModal").classList.add("hidden");
@@ -444,6 +443,7 @@ function loadStudents() {
 		(searchTerm ? `&name=${encodeURIComponent(searchTerm)}` : "");
 
 	const token = localStorage.getItem('token');
+	
 	return fetch(url, {
 		headers: {
 			'Authorization': token ? `Bearer ${token}` : '',
@@ -524,6 +524,17 @@ function renderStudents(students) {
 		studentsBody.appendChild(row);
 	});
 }
+// 暂时移除ES6模块导入，使用传统方式加载
+
+// 页码变更方法
+function changePage(page) {
+	const safeTotalPages = totalPages || 0;
+	if (page >= 0 && page < safeTotalPages) {
+		currentPage = page;
+		loadStudents();
+	}
+}
+
 // 渲染分页控件
 function renderPagination() {
 	const paginationContainer = document.getElementById("paginationContainer");
@@ -560,9 +571,7 @@ function renderPagination() {
 	// 页码按钮（简化版，只显示当前页前后各2页）
 	for (let i = Math.max(0, safeCurrentPage - 2); i < Math.min(safeTotalPages, safeCurrentPage + 3); i++) {
 		html += `
-            <button class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium ${
-			i === safeCurrentPage ? 'z-10 bg-indigo-50 border-indigo-500 text-indigo-600' : 'text-gray-700 hover:bg-gray-50'
-		}" onclick="changePage(${i})">
+            <button class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium ${i === safeCurrentPage ? 'z-10 bg-indigo-50 border-indigo-500 text-indigo-600' : 'text-gray-700 hover:bg-gray-50'}" onclick="changePage(${i})">
                 ${i + 1}
             </button>
         `;
@@ -585,15 +594,6 @@ function renderPagination() {
     `;
 
 	paginationContainer.innerHTML = html;
-}
-
-// 页码变更方法
-function changePage(page) {
-	const safeTotalPages = totalPages || 0;
-	if (page >= 0 && page < safeTotalPages) {
-		currentPage = page;
-		loadStudents();
-	}
 }
 
 // 13. 筛选学生（复用）
