@@ -15,8 +15,9 @@ spring:
         format_sql: true
   # ========== 关键配置：激活指定环境 ==========
   profiles:
+#    active: prod # 激活生产环境 → 加载 application-prod.yml
    active: dev  # 激活开发环境 → 加载 application-dev.yml
-#  active: prod # 激活生产环境 → 加载 application-prod.yml
+
 
 # 日志级别配置
 logging:
