@@ -20,17 +20,20 @@ document.getElementById('loginForm').addEventListener('submit', function (e) {
         },
         body: `uid=${uid}&upass=${upass}`
     })
-        .then(response => response.text())
+        .then(response => response.json())
         .then(data => {
-            alert(data);
-            if (data === '登录成功') {
-                // 登录成功后跳转到主页
+            alert(data.message);
+            if (data.message === '登录成功' && data.token) {
+                // 登录成功后保存JWT令牌到localStorage
+                localStorage.setItem('token', data.token);
                 localStorage.setItem('isLoggedIn', 'true');
+                localStorage.setItem('uid', data.uid);
                 window.location.href = '/html/index.html';
             }
         })
         .catch(error => {
             console.error('登录请求出错:', error);
+            alert('登录请求出错，请稍后重试');
         });
 });
 

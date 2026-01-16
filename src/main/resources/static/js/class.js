@@ -100,13 +100,21 @@ function loadClasses() {
     const url = `/api/classes?page=${currentClassPage}&size=${classPageSize}` +
         (searchTerm ? `&className=${encodeURIComponent(searchTerm)}` : "");
 
-    fetch(url)
+    const token = localStorage.getItem('token');
+    fetch(url, {
+        headers: {
+            'Authorization': token ? `Bearer ${token}` : '',
+        },
+        credentials: 'include'
+    })
         .then(response => {
             if (!response.ok) throw new Error("班级数据加载失败");
             return response.json();
         })
-        .then(data => {
-            // 解析后端返回的分页数据
+        .then(apiResponse => {
+            // 解析后端返回的ApiResponse对象
+            const data = apiResponse?.data || {};
+            // 解析分页数据
             const classes = data.content || []; // 当前页班级列表
             totalClassPages = data.totalPages || 0; // 总页数
             totalClassItems = data.totalElements || 0; // 总条数
@@ -165,61 +173,24 @@ function renderClasses(classes) {
     });
 }
 
-// 渲染班级分页控件
-function renderClassPagination() {
-    const container = document.getElementById("classPaginationContainer");
-    if (!container) return;
 
-    let html = `
-        <div class="flex items-center justify-between px-4 py-3 sm:px-6">
-            <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-            <div>
-                 <p class="text-sm text-gray-700">
-                        显示第 <span class="font-medium">${currentClassPage + 1}</span> 页，
-                        共 <span class="font-medium">${totalClassPages}</span> 页，
-                        总计 <span class="font-medium">${totalClassItems}</span> 条记录
-                 </p>
-                </div>
-            <div class="text-sm text-gray-700">
-                <button onclick="changeClassPage(${currentClassPage - 1})" 
-                        ${currentClassPage === 0 ? 'disabled class="opacity-50 cursor-not-allowed"' : ''}>
-                    上一页
-                </button>
-    `;
-
-    // 页码按钮
-    for (let i = Math.max(0, currentClassPage - 2); i < Math.min(totalClassPages, currentClassPage + 3); i++) {
-        html += `
-            <button onclick="changeClassPage(${i})" 
-                    class="${i === currentClassPage ? 'bg-blue-500 text-white' : ''}">
-                ${i + 1}
-            </button>
-        `;
-    }
-
-    html += `
-                <button onclick="changeClassPage(${currentClassPage + 1})" 
-                        ${currentClassPage >= totalClassPages - 1 ? 'disabled class="opacity-50 cursor-not-allowed"' : ''}>
-                    下一页
-                </button>
-            </div>
-        </div>
-    `;
-
-    container.innerHTML = html;
-}
 function renderClassPagination() {
     const paginationContainer = document.getElementById("classPaginationContainer");
     if (!paginationContainer) return;
+
+    // 确保分页参数有默认值，避免显示undefined
+    const safeTotalClassPages = totalClassPages || 0;
+    const safeTotalClassItems = totalClassItems || 0;
+    const safeCurrentClassPage = currentClassPage || 0;
 
     let html = `
         <div class="flex items-center justify-between px-4 py-3 sm:px-6">
             <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                 <div>
                     <p class="text-sm text-gray-700">
-                        显示第 <span class="font-medium">${currentClassPage + 1}</span> 页，
-                        共 <span class="font-medium">${totalClassPages}</span> 页，
-                        总计 <span class="font-medium">${totalClassItems}</span> 条记录
+                        显示第 <span class="font-medium">${safeCurrentClassPage + 1}</span> 页，
+                        共 <span class="font-medium">${safeTotalClassPages}</span> 页，
+                        总计 <span class="font-medium">${safeTotalClassItems}</span> 条记录
                     </p>
                 </div>
             <div>
@@ -229,17 +200,17 @@ function renderClassPagination() {
     // 上一页按钮
     html += `
         <button class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
-                onclick="changeClassPage(${currentClassPage - 1})" ${currentClassPage === 0 ? 'disabled' : ''}>
+                onclick="changeClassPage(${safeCurrentClassPage - 1})" ${safeCurrentClassPage === 0 ? 'disabled' : ''}>
             <span class="sr-only">上一页</span>
             <i class="fa fa-chevron-left"></i>
         </button>
     `;
 
     // 页码按钮（简化版，只显示当前页前后各2页）
-    for (let i = Math.max(0, currentClassPage - 2); i < Math.min(totalClassPages, currentClassPage + 3); i++) {
+    for (let i = Math.max(0, safeCurrentClassPage - 2); i < Math.min(safeTotalClassPages, safeCurrentClassPage + 3); i++) {
         html += `
             <button class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium ${
-            i === currentClassPage ? 'z-10 bg-indigo-50 border-indigo-500 text-indigo-600' : 'text-gray-700 hover:bg-gray-50'
+            i === safeCurrentClassPage ? 'z-10 bg-indigo-50 border-indigo-500 text-indigo-600' : 'text-gray-700 hover:bg-gray-50'
         }" onclick="changeClassPage(${i})">
                 ${i + 1}
             </button>
@@ -249,7 +220,7 @@ function renderClassPagination() {
     // 下一页按钮
     html += `
         <button class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
-                onclick="changeClassPage(${currentClassPage + 1})" ${currentClassPage >= totalClassPages - 1 ? 'disabled' : ''}>
+                onclick="changeClassPage(${safeCurrentClassPage + 1})" ${safeCurrentClassPage >= safeTotalClassPages - 1 ? 'disabled' : ''}>
             <span class="sr-only">下一页</span>
             <i class="fa fa-chevron-right"></i>
         </button>
@@ -266,7 +237,9 @@ function renderClassPagination() {
 }
 // 切换班级页码
 function changeClassPage(page) {
-    if (page >= 0 && page < totalClassPages) {
+    // 确保使用安全的分页参数
+    const safeTotalClassPages = totalClassPages || 0;
+    if (page >= 0 && page < safeTotalClassPages) {
         currentClassPage = page;
         loadClasses();
     }
@@ -360,8 +333,13 @@ window.deleteClass = function (id) {
         return;
     }
 
+    const token = localStorage.getItem('token');
     fetch(`/api/classes/${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+            'Authorization': token ? `Bearer ${token}` : '',
+        },
+        credentials: 'include'
     })
         .then(response => {
             if (!response.ok) {
@@ -371,6 +349,7 @@ window.deleteClass = function (id) {
             }
             originalClasses = originalClasses.filter(cls => cls.id !== id);
             renderClasses(originalClasses);
+            renderClassPagination(); // 更新分页信息
             window.showNotification('success', '成功', '班级删除成功');
 
             // 调用更新所有班级学生数量的接口
@@ -383,9 +362,14 @@ window.deleteClass = function (id) {
 
 // 更新所有班级的学生数量
 function updateAllClassStudentCounts() {
+    const token = localStorage.getItem('token');
     fetch('/api/classes/updateAllStudentCounts', {
         method: 'PUT',
-        headers: {'Content-Type': 'application/json'}
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': token ? `Bearer ${token}` : '',
+        },
+        credentials: 'include'
     })
         .then(response => {
             if (!response.ok) throw new Error('更新所有班级人数失败');
@@ -453,12 +437,20 @@ function initTeacherDropdown(inputId, dropdownId, hiddenId) {
 // 从数据库加载教师列表（后端返回分页数据，需要从content字段获取数组）
 function loadTeachers() {
     // 请求所有教师数据（不分页）
-    fetch('/api/teachers?page=0&size=100')
+    const token = localStorage.getItem('token');
+    fetch('/api/teachers?page=0&size=100', {
+        headers: {
+            'Authorization': token ? `Bearer ${token}` : '',
+        },
+        credentials: 'include'
+    })
         .then(response => {
             if (!response.ok) throw new Error(`HTTP错误: ${response.status}`);
             return response.json();
         })
-        .then(data => {
+        .then(apiResponse => {
+            // 从ApiResponse中获取分页数据
+            const data = apiResponse?.data || {};
             // 从分页响应中获取教师数组
             const teacherList = Array.isArray(data.content) ? data.content : [];
             // 确保teachers始终是数组
@@ -576,9 +568,14 @@ function addClass() {
     }
 
     // 提交到后端（包含自动匹配的headTeacherId）
+    const token = localStorage.getItem('token');
     fetch('/api/classes', {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': token ? `Bearer ${token}` : '',
+        },
+        credentials: 'include',
         body: JSON.stringify({
             id: classId,
             name: className,
@@ -593,12 +590,15 @@ function addClass() {
         })
         .then(data => {
             window.showNotification('success', '成功', '班级添加成功');
-            originalClasses.push(data);
+            originalClasses.unshift(data);
             renderClasses(originalClasses);
+            renderClassPagination(); // 更新分页信息
             // 重置表单
             document.getElementById('addClassForm').reset();
             headTeacherIdInput.value = '';
+            // 关闭模态框
             document.getElementById('addClassModal').classList.add('hidden');
+            // 更新班级列表
             updateAllClassStudentCounts();
         })
         .catch(error => {
@@ -644,9 +644,14 @@ function updateClass() {
     }
 
     // 提交到后端
+    const token = localStorage.getItem('token');
     fetch(`/api/classes/${id}`, {
         method: 'PUT',
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': token ? `Bearer ${token}` : '',
+        },
+        credentials: 'include',
         body: JSON.stringify({
             id,
             name,
@@ -664,6 +669,7 @@ function updateClass() {
             const index = originalClasses.findIndex(c => c.id === id);
             if (index !== -1) originalClasses[index] = data;
             renderClasses(originalClasses);
+            renderClassPagination(); // 更新分页信息
             document.getElementById('editClassModal').classList.add('hidden');
             updateAllClassStudentCounts();
         })

@@ -48,6 +48,27 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-api</artifactId>
+            <version>0.12.6</version>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-impl</artifactId>
+            <version>0.12.6</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-jackson</artifactId>
+            <version>0.12.6</version>
+            <scope>runtime</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -55,6 +76,37 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+            <!-- 资源压缩插件，用于压缩CSS文件（暂时禁用JavaScript压缩） -->
+            <plugin>
+                <groupId>net.alchim31.maven</groupId>
+                <artifactId>yuicompressor-maven-plugin</artifactId>
+                <version>1.5.1</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>compress</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <nosuffix>true</nosuffix>
+                    <sourceDirectory>${project.basedir}/src/main/resources/static</sourceDirectory>
+                    <outputDirectory>${project.build.directory}/classes/static</outputDirectory>
+                    <includes>
+                        <include>**/*.css</include>
+                        <!-- 暂时禁用JavaScript压缩，因为yuicompressor不支持现代JavaScript语法 -->
+                        <!-- <include>**/*.js</include> -->
+                    </includes>
+                    <excludes>
+                        <exclude>**/*-min.css</exclude>
+                        <exclude>**/*-min.js</exclude>
+                    </excludes>
+                    <linebreakpos>-1</linebreakpos>
+                    <jswarn>false</jswarn>
+                    <nosuffix>true</nosuffix>
+                    <force>true</force>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

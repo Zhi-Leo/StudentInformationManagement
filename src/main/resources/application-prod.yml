@@ -1,1 +1,7 @@
-# ========== 生产环境 - 线上正式服务器 ==========spring:  datasource:    # 生产环境的数据库地址（替换成你的线上库地址）    url: jdbc:mysql://localhost:3306/student?useSSL=true&serverTimezone=UTC&allowPublicKeyRetrieval=true    username: student    password: SQL123456    driver-class-name: com.mysql.cj.jdbc.Driver  jpa:    hibernate:      # 生产环境必配：只校验表结构和实体类一致，不做任何修改，绝对安全，防止误删表/字段      ddl-auto: validate  # 新增：解决中文图片加载失败/Broken pipe/静态资源编码 核心配置  web:    resources:      chain:        strategy:          content:            enabled: true            paths: /**  # 新增：访问根路径 http://IP:9091 自动跳转到你的登录页面，解决404  mvc:    view:      prefix: /html/      suffix: .html# 生产环境端口号 + 原有配置 + 补全编码配置server:  port: 9091  address: 0.0.0.0  tomcat:    uri-encoding: UTF-8  servelet:    encoding:      force: true      charset: UTF-8      enabled: true
+# ========== 生产环境 - 线上正式服务器 ==========spring:  datasource:    # 生产环境的数据库地址（替换成你的线上库地址）    url: jdbc:mysql://localhost:3306/student?useSSL=true&serverTimezone=UTC&allowPublicKeyRetrieval=true    username: student    password: SQL123456    driver-class-name: com.mysql.cj.jdbc.Driver  jpa:
+    hibernate:
+      # 生产环境必配：只校验表结构和实体类一致，不做任何修改，绝对安全，防止误删表/字段
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect  # 新增：解决中文图片加载失败/Broken pipe/静态资源编码 核心配置  web:    resources:      chain:        strategy:          content:            enabled: true            paths: /**  # 新增：访问根路径 http://IP:9091 自动跳转到你的登录页面，解决404  mvc:    view:      prefix: /html/      suffix: .html# 生产环境端口号 + 原有配置 + 补全编码配置server:  port: 9091  address: 0.0.0.0  tomcat:    uri-encoding: UTF-8  servelet:    encoding:      force: true      charset: UTF-8      enabled: true

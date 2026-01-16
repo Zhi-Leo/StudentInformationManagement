@@ -26,12 +26,20 @@ document.addEventListener("DOMContentLoaded", () => {
 // 加载班级数据（从后端获取所有班级，包含ID、名称、班主任等）
 function loadClasses() {
 	// 请求所有班级数据（不分页）
-	return fetch("/api/classes?page=0&size=100")
+	const token = localStorage.getItem('token');
+	return fetch("/api/classes?page=0&size=100", {
+		headers: {
+			'Authorization': token ? `Bearer ${token}` : '',
+		},
+		credentials: 'include'
+	})
 		.then((response) => {
 			if (!response.ok) throw new Error(`班级数据加载失败: ${response.status}`);
 			return response.json();
 		})
-		.then((data) => {
+		.then((apiResponse) => {
+			// 从ApiResponse中获取分页数据
+			const data = apiResponse?.data || {};
 			// 从分页响应中获取班级数组
 			originalClasses = Array.isArray(data.content) ? data.content : [];
 			return originalClasses;
@@ -327,10 +335,15 @@ function addStudent() {
 	submitBtn.disabled = true;
 	submitBtn.textContent = "提交中...";
 
+	const token = localStorage.getItem('token');
 	fetch("/api/students", {
 		method: "POST",
-		headers: { "Content-Type": "application/json" },
+		headers: {
+			"Content-Type": "application/json",
+			'Authorization': token ? `Bearer ${token}` : '',
+		},
 		body: JSON.stringify({ id, clas, name, age, sex, grade }),
+		credentials: 'include'
 	})
 		.then((response) => {
 			if (response.status === 400) {
@@ -341,9 +354,11 @@ function addStudent() {
 			if (!response.ok) throw new Error("添加失败，请重试");
 			return response.json();
 		})
-		.then((data) => {
-			originalStudents.push(data);
+		.then((apiResponse) => {
+			const newStudent = apiResponse?.data || {};
+			originalStudents.push(newStudent);
 			renderStudents(originalStudents);
+			renderPagination(); // 更新分页信息
 			document.getElementById("addStudentModal").classList.add("hidden");
 			window.showNotification("success", "成功", "学生添加成功");
 			updateAllClassStudentCounts();
@@ -383,10 +398,15 @@ function updateStudent() {
 	submitBtn.disabled = true;
 	submitBtn.textContent = "提交中...";
 
+	const token = localStorage.getItem('token');
 	fetch(`/api/students/${id}`, {
 		method: "PUT",
-		headers: { "Content-Type": "application/json" },
+		headers: {
+			"Content-Type": "application/json",
+			'Authorization': token ? `Bearer ${token}` : '',
+		},
 		body: JSON.stringify({ id, clas, name, age, sex, grade }),
+		credentials: 'include'
 	})
 		.then((response) => {
 			if (!response.ok) {
@@ -396,12 +416,14 @@ function updateStudent() {
 			}
 			return response.json();
 		})
-		.then((data) => {
+		.then((apiResponse) => {
+			const updatedStudent = apiResponse?.data || {};
 			const index = originalStudents.findIndex((s) => s.id === id);
 			if (index !== -1) {
-				originalStudents[index] = data;
+				originalStudents[index] = updatedStudent;
 			}
 			renderStudents(originalStudents);
+			renderPagination(); // 更新分页信息
 			document.getElementById("editStudentModal").classList.add("hidden");
 			window.showNotification("success", "成功", "学生信息更新成功");
 			updateAllClassStudentCounts();
@@ -421,22 +443,35 @@ function loadStudents() {
 	const url = `/api/students?page=${currentPage}&size=${pageSize}` +
 		(searchTerm ? `&name=${encodeURIComponent(searchTerm)}` : "");
 
-	return fetch(url)
+	const token = localStorage.getItem('token');
+	return fetch(url, {
+		headers: {
+			'Authorization': token ? `Bearer ${token}` : '',
+		},
+		credentials: 'include'
+	})
 		.then(response => {
 			if (!response.ok) throw new Error(`学生数据加载失败: ${response.status}`);
 			return response.json();
 		})
-		.then(data => {
-			// 后端返回的Page对象包含以下属性
-			originalStudents = data.content; // 当前页数据
-			totalPages = data.totalPages;    // 总页数
-			totalItems = data.totalElements; // 总条数
+		.then(apiResponse => {
+			// 后端返回的是ApiResponse对象，data字段才是真正的Page对象
+			const pageData = apiResponse?.data || {};
+			// 从Page对象中获取所需属性
+			originalStudents = pageData.content || []; // 当前页数据
+			totalPages = pageData.totalPages || 0;    // 总页数
+			totalItems = pageData.totalElements || 0; // 总条数
 			renderStudents(originalStudents);
 			renderPagination(); // 渲染分页控件
-			return data;
+			return apiResponse;
 		})
 		.catch(error => {
-			console.error("加载学生数据失败:", error);
+			// 请求失败时重置分页参数
+			originalStudents = [];
+			totalPages = 0;
+			totalItems = 0;
+			renderStudents(originalStudents);
+			renderPagination();
 			return [];
 		});
 }
@@ -448,7 +483,10 @@ function renderStudents(students) {
 
 	studentsBody.innerHTML = "";
 
-	if (students.length === 0) {
+	// 确保students是数组
+	const studentList = Array.isArray(students) ? students : [];
+
+	if (studentList.length === 0) {
 		studentsBody.innerHTML = `
             <tr class="text-center">
                 <td colspan="7" class="px-6 py-12 text-gray-500">
@@ -460,7 +498,7 @@ function renderStudents(students) {
 		return;
 	}
 
-	students.forEach((student) => {
+	studentList.forEach((student) => {
 		const row = document.createElement("tr");
 		row.className = "hover:bg-gray-50 transition-colors duration-150";
 		row.dataset.studentId = student.id;
@@ -491,14 +529,19 @@ function renderPagination() {
 	const paginationContainer = document.getElementById("paginationContainer");
 	if (!paginationContainer) return;
 
+	// 确保分页参数有默认值
+	const safeTotalPages = totalPages || 0;
+	const safeTotalItems = totalItems || 0;
+	const safeCurrentPage = currentPage || 0;
+
 	let html = `
         <div class="flex items-center justify-between px-4 py-3 sm:px-6">
             <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                 <div>
                     <p class="text-sm text-gray-700">
-                        显示第 <span class="font-medium">${currentPage + 1}</span> 页，
-                        共 <span class="font-medium">${totalPages}</span> 页，
-                        总计 <span class="font-medium">${totalItems}</span> 条记录
+                        显示第 <span class="font-medium">${safeCurrentPage + 1}</span> 页，
+                        共 <span class="font-medium">${safeTotalPages}</span> 页，
+                        总计 <span class="font-medium">${safeTotalItems}</span> 条记录
                     </p>
                 </div>
                 <div>
@@ -508,17 +551,17 @@ function renderPagination() {
 	// 上一页按钮
 	html += `
         <button class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
-                onclick="changePage(${currentPage - 1})" ${currentPage === 0 ? 'disabled' : ''}>
+                onclick="changePage(${safeCurrentPage - 1})" ${safeCurrentPage === 0 ? 'disabled' : ''}>
             <span class="sr-only">上一页</span>
             <i class="fa fa-chevron-left"></i>
         </button>
     `;
 
 	// 页码按钮（简化版，只显示当前页前后各2页）
-	for (let i = Math.max(0, currentPage - 2); i < Math.min(totalPages, currentPage + 3); i++) {
+	for (let i = Math.max(0, safeCurrentPage - 2); i < Math.min(safeTotalPages, safeCurrentPage + 3); i++) {
 		html += `
             <button class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium ${
-			i === currentPage ? 'z-10 bg-indigo-50 border-indigo-500 text-indigo-600' : 'text-gray-700 hover:bg-gray-50'
+			i === safeCurrentPage ? 'z-10 bg-indigo-50 border-indigo-500 text-indigo-600' : 'text-gray-700 hover:bg-gray-50'
 		}" onclick="changePage(${i})">
                 ${i + 1}
             </button>
@@ -528,7 +571,7 @@ function renderPagination() {
 	// 下一页按钮
 	html += `
         <button class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
-                onclick="changePage(${currentPage + 1})" ${currentPage >= totalPages - 1 ? 'disabled' : ''}>
+                onclick="changePage(${safeCurrentPage + 1})" ${safeCurrentPage >= safeTotalPages - 1 ? 'disabled' : ''}>
             <span class="sr-only">下一页</span>
             <i class="fa fa-chevron-right"></i>
         </button>
@@ -546,7 +589,8 @@ function renderPagination() {
 
 // 页码变更方法
 function changePage(page) {
-	if (page >= 0 && page < totalPages) {
+	const safeTotalPages = totalPages || 0;
+	if (page >= 0 && page < safeTotalPages) {
 		currentPage = page;
 		loadStudents();
 	}
@@ -590,9 +634,14 @@ function deleteStudent(studentId) {
 		btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> 删除中...';
 	});
 
+	const token = localStorage.getItem('token');
 	fetch(`/api/students/${studentId}`, {
 		method: "DELETE",
-		headers: { "Content-Type": "application/json" },
+		headers: {
+			"Content-Type": "application/json",
+			'Authorization': token ? `Bearer ${token}` : '',
+		},
+		credentials: 'include'
 	})
 		.then((response) => {
 			if (!response.ok) {
@@ -608,6 +657,7 @@ function deleteStudent(studentId) {
 				(student) => student.id !== studentId
 			);
 			renderStudents(originalStudents);
+			renderPagination(); // 更新分页信息
 			window.showNotification("success", "成功", "学生删除成功");
 			updateAllClassStudentCounts();
 		})
@@ -624,9 +674,14 @@ function deleteStudent(studentId) {
 
 // 16. 更新班级人数（复用）
 function updateAllClassStudentCounts() {
+	const token = localStorage.getItem('token');
 	fetch("/api/classes/updateAllStudentCounts", {
 		method: "PUT",
-		headers: { "Content-Type": "application/json" },
+		headers: {
+			"Content-Type": "application/json",
+			'Authorization': token ? `Bearer ${token}` : '',
+		},
+		credentials: 'include'
 	})
 		.then((response) => {
 			if (!response.ok) throw new Error("更新班级人数失败");

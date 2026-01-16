@@ -26,12 +26,20 @@ document.addEventListener("DOMContentLoaded", () => {
 // 新增：加载班级数据（从后端获取所有班级）
 function loadClasses() {
 	// 请求所有班级数据（不分页）
-	return fetch("/api/classes?page=0&size=100")
+	const token = localStorage.getItem('token');
+	return fetch("/api/classes?page=0&size=100", {
+		headers: {
+			'Authorization': token ? `Bearer ${token}` : '',
+		},
+		credentials: 'include'
+	})
 		.then((response) => {
 			if (!response.ok) throw new Error(`班级数据加载失败: ${response.status}`);
 			return response.json();
 		})
-		.then((data) => {
+		.then((apiResponse) => {
+			// 从ApiResponse中获取分页数据
+			const data = apiResponse?.data || {};
 			// 从分页响应中获取班级数组
 			originalClasses = Array.isArray(data.content) ? data.content : [];
 			return originalClasses;
@@ -174,17 +182,25 @@ function addTeacher() {
 	}
 
 	// 发送添加请求
+	const token = localStorage.getItem('token');
 	fetch("/api/teachers", {
 		method: "POST",
-		headers: { "Content-Type": "application/json" },
+		headers: {
+			"Content-Type": "application/json",
+			'Authorization': token ? `Bearer ${token}` : '',
+		},
+		credentials: 'include',
 		body: JSON.stringify({ id, name, clas, age, sex, teaching }),
 	})
 		.then((response) => {
 			if (!response.ok) throw new Error("添加失败，可能ID已存在");
 			return response.json();
 		})
-		.then(() => {
-			// 重新加载数据，更新列表
+		.then((apiResponse) => {
+			const newTeacher = apiResponse?.data || {};
+			originalTeachers.unshift(newTeacher);
+			renderTeachers(originalTeachers);
+			// 重新加载数据，确保数据一致性
 			loadTeachers();
 			// 关闭模态框并重置表单
 			document.getElementById("addTeacherModal").classList.add("hidden");
@@ -229,9 +245,14 @@ function updateTeacher() {
 	}
 
 	// 发送更新请求
+	const token = localStorage.getItem('token');
 	fetch(`/api/teachers/${id}`, {
 		method: "PUT",
-		headers: { "Content-Type": "application/json" },
+		headers: {
+			"Content-Type": "application/json",
+			'Authorization': token ? `Bearer ${token}` : '',
+		},
+		credentials: 'include',
 		body: JSON.stringify({ id, name, clas, age, sex, teaching }),
 	})
 		.then((response) => {
@@ -347,22 +368,34 @@ function loadTeachers() {
 	const url = `/api/teachers?page=${currentTeacherPage}&size=${teacherPageSize}` +
 		(searchTerm ? `&name=${encodeURIComponent(searchTerm)}` : "");
 
-	fetch(url)
+	// 发送带认证头的请求
+	const token = localStorage.getItem('token');
+	fetch(url, {
+		headers: {
+			'Authorization': token ? `Bearer ${token}` : '',
+		},
+		credentials: 'include'
+	})
 		.then(response => {
 			if (!response.ok) throw new Error("教师数据加载失败");
 			return response.json();
 		})
-		.then(data => {
+		.then(apiResponse => {
+			// 解析后端返回的ApiResponse对象，确保data存在
+			const data = apiResponse?.data || {};
 			// 解析后端返回的分页数据
-			const teachers = data.content; // 当前页教师列表
-			totalTeacherPages = data.totalPages; // 总页数
-			totalTeacherItems = data.totalElements; // 总条数
+			const teachers = data.content || []; // 当前页教师列表
+			totalTeacherPages = data.totalPages || 0; // 总页数
+			totalTeacherItems = data.totalElements || 0; // 总条数
 			originalTeachers = teachers;
 			renderTeachers(teachers); // 渲染教师表格
 			renderTeacherPagination(); // 渲染分页控件
 		})
 		.catch(error => {
 			console.error("加载教师失败:", error);
+			// 出错时确保originalTeachers是数组
+			originalTeachers = [];
+			renderTeachers(originalTeachers);
 		});
 }
 
@@ -423,14 +456,19 @@ function renderTeacherPagination() {
 	const paginationContainer = document.getElementById("teacherPaginationContainer");
 	if (!paginationContainer) return;
 
+	// 确保分页参数有默认值，避免显示undefined
+	const safeTotalTeacherPages = totalTeacherPages || 0;
+	const safeTotalTeacherItems = totalTeacherItems || 0;
+	const safeCurrentTeacherPage = currentTeacherPage || 0;
+
 	let html = `
         <div class="flex items-center justify-between px-4 py-3 sm:px-6">
             <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                 <div>
                     <p class="text-sm text-gray-700">
-                        显示第 <span class="font-medium">${currentTeacherPage + 1}</span> 页，
-                        共 <span class="font-medium">${totalTeacherPages}</span> 页，
-                        总计 <span class="font-medium">${totalTeacherItems}</span> 条记录
+                        显示第 <span class="font-medium">${safeCurrentTeacherPage + 1}</span> 页，
+                        共 <span class="font-medium">${safeTotalTeacherPages}</span> 页，
+                        总计 <span class="font-medium">${safeTotalTeacherItems}</span> 条记录
                     </p>
                 </div>
             <div>
@@ -440,18 +478,18 @@ function renderTeacherPagination() {
 	// 上一页按钮
 	html += `
         <button class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
-                onclick="changeTeacherPage(${currentTeacherPage - 1})" ${currentTeacherPage === 0 ? 'disabled' : ''}>
+                onclick="changeTeacherPage(${safeCurrentTeacherPage - 1})" ${safeCurrentTeacherPage === 0 ? 'disabled' : ''}>
             <span class="sr-only">上一页</span>
             <i class="fa fa-chevron-left"></i>
         </button>
     `;
 
 	// 页码按钮（简化版，只显示当前页前后各2页）
-	for (let i = Math.max(0, currentTeacherPage - 2); i < Math.min(totalTeacherPages, currentTeacherPage + 3); i++) {
+	for (let i = Math.max(0, safeCurrentTeacherPage - 2); i < Math.min(safeTotalTeacherPages, safeCurrentTeacherPage + 3); i++) {
 		html += `
             <button class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium ${
-			i === currentTeacherPage ? 'z-10 bg-indigo-50 border-indigo-500 text-indigo-600' : 'text-gray-700 hover:bg-gray-50'
-		}" onclick="changeTeacherPage(${i})">
+		i === safeCurrentTeacherPage ? 'z-10 bg-indigo-50 border-indigo-500 text-indigo-600' : 'text-gray-700 hover:bg-gray-50'
+	}" onclick="changeTeacherPage(${i})">
                 ${i + 1}
             </button>
         `;
@@ -460,7 +498,7 @@ function renderTeacherPagination() {
 	// 下一页按钮
 	html += `
         <button class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
-                onclick="changeTeacherPage(${currentTeacherPage + 1})" ${currentTeacherPage >= totalTeacherPages - 1 ? 'disabled' : ''}>
+                onclick="changeTeacherPage(${safeCurrentTeacherPage + 1})" ${safeCurrentTeacherPage >= safeTotalTeacherPages - 1 ? 'disabled' : ''}>
             <span class="sr-only">下一页</span>
             <i class="fa fa-chevron-right"></i>
         </button>
@@ -478,7 +516,9 @@ function renderTeacherPagination() {
 
 // 切换教师页码
 function changeTeacherPage(page) {
-	if (page >= 0 && page < totalTeacherPages) {
+	// 确保使用安全的分页参数
+	const safeTotalTeacherPages = totalTeacherPages || 0;
+	if (page >= 0 && page < safeTotalTeacherPages) {
 		currentTeacherPage = page;
 		loadTeachers();
 	}
@@ -529,8 +569,13 @@ window.deleteTeacher = function (id) {
 		return;
 	}
 
+	const token = localStorage.getItem('token');
 	fetch(`/api/teachers/${id}`, {
 		method: "DELETE",
+		headers: {
+			'Authorization': token ? `Bearer ${token}` : '',
+		},
+		credentials: 'include'
 	})
 		.then((response) => {
 			if (!response.ok) throw new Error("删除失败，可能存在关联课程或班级");
